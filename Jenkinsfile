@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Configuration SonarQube
-        SONAR_PROJECT_KEY = 'projet-dev'                   // 🔁 À adapter
+        SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'                   // 🔁 À adapter
         SONAR_HOST_URL = 'http://localhost:9000'
         SONAR_LOGIN = credentials('sonar-token')           // 🔁 Token stocké dans Jenkins
     }
