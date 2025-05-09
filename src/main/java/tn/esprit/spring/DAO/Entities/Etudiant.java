@@ -11,6 +11,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "T_ETUDIANT")
+@Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
