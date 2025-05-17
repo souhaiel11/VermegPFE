@@ -1,4 +1,4 @@
-package tn.esprit.spring.RestControllers;
+package tn.esprit.spring.restcontrollers; // ✅ Convention Java : tout en minuscules
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -11,35 +11,36 @@ import java.util.List;
 @RequestMapping("etudiant")
 @AllArgsConstructor
 public class EtudiantRestController {
-    IEtudiantService service;
+
+    private final IEtudiantService service; // ✅ Bonne pratique : injection en `final`
 
     @PostMapping("addOrUpdate")
-    Etudiant addOrUpdate(@RequestBody Etudiant e) {
+    public Etudiant addOrUpdate(@RequestBody Etudiant e) {
         return service.addOrUpdate(e);
     }
 
     @GetMapping("findAll")
-    List<Etudiant> findAll() {
+    public List<Etudiant> findAll() {
         return service.findAll();
     }
 
     @GetMapping("findById")
-    Etudiant findById(@RequestParam long id) {
+    public Etudiant findById(@RequestParam long id) {
         return service.findById(id);
     }
 
     @DeleteMapping("delete")
-    void delete(@RequestBody Etudiant e) {
+    public void delete(@RequestBody Etudiant e) {
         service.delete(e);
     }
 
     @DeleteMapping("deleteById")
-    void deleteById(@RequestParam long id) {
+    public void deleteById(@RequestParam long id) {
         service.deleteById(id);
     }
 
     @GetMapping("selectJPQL")
-    List<Etudiant> selectJPQL(@RequestParam String nom){
+    public List<Etudiant> selectJPQL(@RequestParam String nom) {
         return service.selectJPQL(nom);
     }
 }
