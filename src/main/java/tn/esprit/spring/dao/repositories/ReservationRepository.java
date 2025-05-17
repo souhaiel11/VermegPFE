@@ -1,6 +1,6 @@
 package tn.esprit.spring.dao.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
-import tn.esprit.spring.DAO.Entities.Reservation;
+import tn.esprit.spring.dao.entities.Reservation;
 
 import java.time.LocalDate;
 import java.util.List;
