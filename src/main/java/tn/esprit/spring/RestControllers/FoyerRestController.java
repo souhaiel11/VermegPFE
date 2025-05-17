@@ -1,4 +1,4 @@
-package tn.esprit.spring.restcontrollers; // ✅ Nom de package en minuscules
+package tn.esprit.spring.restcontrollers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class FoyerRestController {
 
-    private final IFoyerService service; // ✅ Injection par final pour Lombok
+    private final IFoyerService service;
 
     @PostMapping("addOrUpdate")
     public Foyer addOrUpdate(@RequestBody Foyer f) {

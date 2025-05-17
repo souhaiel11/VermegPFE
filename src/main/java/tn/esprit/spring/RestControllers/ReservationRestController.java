@@ -1,4 +1,4 @@
-package tn.esprit.spring.restcontrollers; // ✅ Nom du package en minuscules
+package tn.esprit.spring.restcontrollers;
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -13,7 +13,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ReservationRestController {
 
-    private final IReservationService service; // ✅ Bonne pratique avec Lombok
+    private final IReservationService service;
 
     @PostMapping("addOrUpdate")
     public Reservation addOrUpdate(@RequestBody Reservation r) {

@@ -1,5 +1,4 @@
-package tn.esprit.spring.restcontrollers; // ✅ Nom de package en minuscules conforme à la convention
-
+package tn.esprit.spring.restcontrollers;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.dao.entities.Chambre;
@@ -13,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class ChambreRestController {
 
-    private final IChambreService service; // ✅ bonne pratique : final
+    private final IChambreService service;
 
     @PostMapping("addOrUpdate")
     public Chambre addOrUpdate(@RequestBody Chambre c) {

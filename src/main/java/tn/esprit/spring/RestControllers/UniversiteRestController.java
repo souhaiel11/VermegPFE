@@ -1,4 +1,4 @@
-package tn.esprit.spring.restcontrollers; // ✅ Nom du package en minuscules
+package tn.esprit.spring.restcontrollers; /
 
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,7 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UniversiteRestController {
 
-    private final IUniversiteService service; // ✅ Bonne pratique pour l’injection
+    private final IUniversiteService service;
 
     @PostMapping("addOrUpdate")
     public Universite addOrUpdate(@RequestBody Universite u) {

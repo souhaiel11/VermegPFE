@@ -1,5 +1,4 @@
-package tn.esprit.spring.restcontrollers; // ✅ Convention Java : tout en minuscules
-
+package tn.esprit.spring.restcontrollers;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.spring.dao.entities.Etudiant;
@@ -12,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 public class EtudiantRestController {
 
-    private final IEtudiantService service; // ✅ Bonne pratique : injection en `final`
+    private final IEtudiantService service;
 
     @PostMapping("addOrUpdate")
     public Etudiant addOrUpdate(@RequestBody Etudiant e) {
