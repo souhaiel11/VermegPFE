@@ -1,57 +1,59 @@
 package tn.esprit.spring;
 
-import org.junit.After;
 import org.junit.jupiter.api.*;
-import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 
-@RunWith(SpringRunner.class)
-@TestMethodOrder(MethodOrderer.class)
+import static org.junit.jupiter.api.Assertions.*;
+
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
 public class BlocServiceTest {
 
     @BeforeAll
-    void bedore() {
-
+    static void beforeAll() {
+        System.out.println("Before all tests");
     }
 
     @AfterAll
-    void after() {
-
+    static void afterAll() {
+        System.out.println("After all tests");
     }
 
     @BeforeEach
     void beforeEach() {
-
+        System.out.println("Before each test");
     }
 
     @AfterEach
     void afterEach() {
-
+        System.out.println("After each test");
     }
 
     @Order(1)
     @RepeatedTest(4)
     void test() {
-
-    }
-
-    @Order(4)
-    @Test
-    void test2() {
-
+        int result = 2 + 3;
+        assertEquals(5, result, "2 + 3 should equal 5");
     }
 
     @Order(2)
     @Test
     void test3() {
-
+        String blocName = "Bloc A";
+        assertTrue(blocName.startsWith("Bloc"), "Bloc name should start with 'Bloc'");
     }
 
     @Order(3)
     @Test
     void test4() {
+        Object o = new Object();
+        assertNotNull(o, "Object should not be null");
+    }
 
+    @Order(4)
+    @Test
+    void test2() {
+        boolean isActive = true;
+        assertTrue(isActive, "isActive should be true");
     }
 }
