@@ -2,10 +2,10 @@ package tn.esprit.spring.Services.Universite;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.esprit.spring.DAO.Entities.Foyer;
-import tn.esprit.spring.DAO.Entities.Universite;
-import tn.esprit.spring.DAO.Repositories.FoyerRepository;
-import tn.esprit.spring.DAO.Repositories.UniversiteRepository;
+import tn.esprit.spring.dao.entities.Foyer;
+import tn.esprit.spring.dao.entities.Universite;
+import tn.esprit.spring.dao.repositories.FoyerRepository;
+import tn.esprit.spring.dao.repositories.UniversiteRepository;
 
 import java.util.List;
 

@@ -2,10 +2,10 @@ package tn.esprit.spring.Services.Etudiant;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.esprit.spring.DAO.Entities.Etudiant;
-import tn.esprit.spring.DAO.Entities.Reservation;
-import tn.esprit.spring.DAO.Repositories.EtudiantRepository;
-import tn.esprit.spring.DAO.Repositories.ReservationRepository;
+import tn.esprit.spring.dao.entities.Etudiant;
+import tn.esprit.spring.dao.entities.Reservation;
+import tn.esprit.spring.dao.repositories.EtudiantRepository;
+import tn.esprit.spring.dao.repositories.ReservationRepository;
 
 import java.util.List;
 
