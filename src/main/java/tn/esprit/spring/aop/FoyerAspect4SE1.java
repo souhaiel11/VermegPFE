@@ -10,13 +10,9 @@ import org.springframework.stereotype.Component;
 @Aspect
 @Component
 @Slf4j
-public class FoyerAspect4SE1 { // La classe : Aspect
+public class FoyerAspect4SE1 {
 
-    // @After() ==> Après l'exécution
-    // @AfterThrowing() ==> Après le déclenchement d'une exception
-    // @AfterReturning() ==> Après la bonne exécution
-    // @Before() ==> Avant l'exécution
-    // @Around() ==> En // avec l'exécution
+
 
     @Before("execution(* tn.esprit.spring.Services..*.*(..))")
     public void hello(JoinPoint jp){ // La méthode : Advice
