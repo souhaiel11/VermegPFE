@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         // Configuration SonarQube
-        SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'                   // 🔁 À adapter
+        SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = credentials('sonar-token')           // 🔁 Token stocké dans Jenkins
+        SONAR_LOGIN = credentials('sonar-token')           //  Token stocké dans Jenkins
     }
 
     stages {
@@ -14,8 +14,8 @@ pipeline {
             steps {
                 echo "🔁 Clonage du projet depuis GitHub"
                 git branch: 'souhaielBloc',
-                    url: 'https://github.com/OussamaBENHADJAHMED999/equipe1-3arctic1-2425.git',  // 🔁 Modifier ici
-                    credentialsId: 'github-token'  // 🔁 Assure-toi que c’est bien créé dans Jenkins > Credentials
+                    url: 'https://github.com/OussamaBENHADJAHMED999/equipe1-3arctic1-2425.git',
+                    credentialsId: 'github-token'
             }
         }
 
