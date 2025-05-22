@@ -44,7 +44,9 @@ public class BlocServiceTest {
     @Test
     @Order(1)
     public void testaddOrUpdate2_IdBlocPresent() {
+
         assertNotNull(bloc.getIdBloc());
+        assertTrue(bloc.getIdBloc() > 0, "L'id du bloc doit être supérieur à 0");
     }
 
     @Test
