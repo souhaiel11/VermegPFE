@@ -7,6 +7,7 @@ pipeline {
         SONAR_LOGIN = credentials('sonar-token')
     }
 
+    stages {
         stage('🧹 Nettoyage avec Maven') {
             steps {
                 sh 'mvn clean'
@@ -19,17 +20,17 @@ pipeline {
             }
         }
 
-        stage('🧪 Tests ') {
-                 steps {
-                     echo "▶️ Tests unitaires - BlocServiceMockTest"
-                                     sh 'mvn test -Dtest=BlocServiceMockTest'
+        stage('🧪 Tests') {
+            steps {
+                echo "▶️ Tests unitaires - BlocServiceMockTest"
+                sh 'mvn test -Dtest=BlocServiceMockTest'
 
-                     echo "▶️ Tests d’intégration - BlocServiceTest"
-                                   sh 'mvn test -Dtest=BlocServiceTest'
-                 }
-             }
+                echo "▶️ Tests d’intégration - BlocServiceTest"
+                sh 'mvn test -Dtest=BlocServiceTest'
+            }
+        }
 
-        stage('📦 Packaging ') {
+        stage('📦 Packaging') {
             steps {
                 sh 'mvn package -DskipTests -e'
             }
