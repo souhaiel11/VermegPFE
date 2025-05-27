@@ -2,17 +2,14 @@ pipeline {
     agent any
 
     environment {
-        // Configuration SonarQube
         SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = credentials('sonar-token') // Token stocké dans Jenkins
+        SONAR_LOGIN = credentials('sonar-token')
     }
 
     stages {
-
         stage('📦 Clonage du dépôt Git privé') {
             steps {
-                echo "🔁 Clonage du projet depuis GitHub"
                 git branch: 'souhaielBloc',
                     url: 'https://github.com/OussamaBENHADJAHMED999/equipe1-3arctic1-2425.git',
                     credentialsId: 'github-token'
@@ -21,28 +18,36 @@ pipeline {
 
         stage('🧹 Nettoyage avec Maven') {
             steps {
-                echo "🧼 Suppression du dossier target"
                 sh 'mvn clean'
             }
         }
 
         stage('⚙️ Compilation du code') {
             steps {
-                echo "🔧 Compilation avec mvn compile"
                 sh 'mvn compile'
             }
         }
 
-        stage('📦 Packaging sans exécuter les tests') {
+        stage('🧪 Exécution des tests unitaires') {
             steps {
-                echo "🎯 Génération du livrable (tests désactivés)"
+                sh 'mvn test -Dtest=BlocServiceMockTest'
+            }
+        }
+
+        stage('🧪 Exécution des tests d’intégration') {
+            steps {
+                sh 'mvn test -Dtest=BlocServiceTest'
+            }
+        }
+
+        stage('📦 Packaging sans tests') {
+            steps {
                 sh 'mvn package -DskipTests -e'
             }
         }
 
         stage('🔍 Analyse SonarQube') {
             steps {
-                echo "📊 Analyse qualité avec SonarQube"
                 withSonarQubeEnv('MySonarServer') {
                     sh """
                         mvn sonar:sonar \
@@ -56,7 +61,6 @@ pipeline {
 
         stage('📤 Déploiement vers Nexus') {
             steps {
-                echo "📦 Déploiement du livrable vers Nexus Repository"
                 sh 'mvn deploy -DskipTests'
             }
         }
