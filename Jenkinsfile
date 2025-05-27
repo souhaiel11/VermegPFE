@@ -7,15 +7,6 @@ pipeline {
         SONAR_LOGIN = credentials('sonar-token')
     }
 
-    stages {
-        stage('📦 Clonage du dépôt Git privé') {
-            steps {
-                git branch: 'souhaielBloc',
-                    url: 'https://github.com/OussamaBENHADJAHMED999/equipe1-3arctic1-2425.git',
-                    credentialsId: 'github-token'
-            }
-        }
-
         stage('🧹 Nettoyage avec Maven') {
             steps {
                 sh 'mvn clean'
@@ -28,19 +19,17 @@ pipeline {
             }
         }
 
-        stage('🧪 Exécution des tests unitaires') {
-            steps {
-                sh 'mvn test -Dtest=BlocServiceMockTest'
-            }
-        }
+        stage('🧪 Tests ') {
+                 steps {
+                     echo "▶️ Tests unitaires - BlocServiceMockTest"
+                                     sh 'mvn test -Dtest=BlocServiceMockTest'
 
-        stage('🧪 Exécution des tests d’intégration') {
-            steps {
-                sh 'mvn test -Dtest=BlocServiceTest'
-            }
-        }
+                     echo "▶️ Tests d’intégration - BlocServiceTest"
+                                   sh 'mvn test -Dtest=BlocServiceTest'
+                 }
+             }
 
-        stage('📦 Packaging sans tests') {
+        stage('📦 Packaging ') {
             steps {
                 sh 'mvn package -DskipTests -e'
             }
