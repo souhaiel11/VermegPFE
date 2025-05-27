@@ -46,6 +46,7 @@ public class BlocRepoMockTest {
         Bloc bloc = Bloc.builder().nomBloc("Bloc Alpha").capaciteBloc(150).build();
         Bloc bloc1 = Bloc.builder().nomBloc("Bloc Beta").capaciteBloc(160).build();
         blocService.addOrUpdate(bloc);
+        blocService.addOrUpdate(bloc1);
         //List<Bloc> blocsList = blocRepository.findAll();
        List<Bloc> blocsList = blocService.findAll();
         Assertions.assertNotNull(blocsList);

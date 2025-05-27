@@ -34,18 +34,16 @@ public class BlocService implements IBlocService {
     public Bloc addOrUpdate(Bloc b) {
         List<Chambre> chambres = b.getChambres();
 
-        // Ne pas essayer de sauvegarder directement les chambres si le bloc n'a pas encore été persisté
-        b.setChambres(null); // Temporairement désassocier les chambres
+        b.setChambres(null);
 
-        Bloc savedBloc = blocRepository.save(b); // Bloc persisté avec ID
+        Bloc savedBloc = blocRepository.save(b);
 
-        // Associer le bloc persisté à chaque chambre
         if (chambres != null) {
             for (Chambre chambre : chambres) {
                 chambre.setBloc(savedBloc);
             }
-            savedBloc.setChambres(chambres); // Réassocier la liste au bloc
-            blocRepository.save(savedBloc);  // Mise à jour avec les chambres
+            savedBloc.setChambres(chambres);
+            blocRepository.save(savedBloc);
         }
 
         return savedBloc;
