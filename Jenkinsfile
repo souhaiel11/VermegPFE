@@ -5,7 +5,7 @@ pipeline {
         // Configuration SonarQube
         SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = credentials('sonar-token')           //  Token stocké dans Jenkins
+        SONAR_LOGIN = credentials('sonar-token') // Token stocké dans Jenkins
     }
 
     stages {
@@ -36,7 +36,7 @@ pipeline {
         stage('📦 Packaging sans exécuter les tests') {
             steps {
                 echo "🎯 Génération du livrable (tests désactivés)"
-                sh 'mvn package -DskipTests -e'  // ❌ Skip tests à cause de l'absence de la base de données
+                sh 'mvn package -DskipTests -e'
             }
         }
 
@@ -51,6 +51,13 @@ pipeline {
                         -Dsonar.login=${SONAR_LOGIN}
                     """
                 }
+            }
+        }
+
+        stage('📤 Déploiement vers Nexus') {
+            steps {
+                echo "📦 Déploiement du livrable vers Nexus Repository"
+                sh 'mvn deploy -DskipTests'
             }
         }
     }
