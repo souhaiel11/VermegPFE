@@ -11,6 +11,7 @@ import tn.esprit.spring.dao.repositories.FoyerRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -21,11 +22,13 @@ public class BlocService implements IBlocService {
     FoyerRepository foyerRepository;
 
     @Override
-    public Bloc addOrUpdate2(Bloc b) { //Cascade
+    public Bloc addOrUpdate2(Bloc b) {
         List<Chambre> chambres = b.getChambres();
-        for (Chambre c : chambres) {
-            c.setBloc(b);
-            chambreRepository.save(c);
+        if (chambres != null) {
+            for (Chambre c : chambres) {
+                c.setBloc(b);
+                chambreRepository.save(c);
+            }
         }
         return b;
     }
@@ -33,14 +36,13 @@ public class BlocService implements IBlocService {
     @Override
     public Bloc addOrUpdate(Bloc b) {
         List<Chambre> chambres = b.getChambres();
-
         b.setChambres(null);
-
         Bloc savedBloc = blocRepository.save(b);
 
         if (chambres != null) {
             for (Chambre chambre : chambres) {
                 chambre.setBloc(savedBloc);
+                chambreRepository.save(chambre);
             }
             savedBloc.setChambres(chambres);
             blocRepository.save(savedBloc);
@@ -49,7 +51,6 @@ public class BlocService implements IBlocService {
         return savedBloc;
     }
 
-
     @Override
     public List<Bloc> findAll() {
         return blocRepository.findAll();
@@ -57,38 +58,44 @@ public class BlocService implements IBlocService {
 
     @Override
     public Bloc findById(long id) {
-        return blocRepository.findById(id).get();
+        return blocRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bloc non trouvé pour l'id: " + id));
     }
 
     @Override
     public void deleteById(long id) {
-        Bloc b =blocRepository.findById(id).get();
+        Bloc b = blocRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Bloc non trouvé pour suppression, id: " + id));
+
         chambreRepository.deleteAll(b.getChambres());
         blocRepository.delete(b);
     }
 
     @Override
     public void delete(Bloc b) {
-        chambreRepository.deleteAll(b.getChambres());
+        if (b.getChambres() != null) {
+            chambreRepository.deleteAll(b.getChambres());
+        }
         blocRepository.delete(b);
     }
 
     @Override
     public Bloc affecterChambresABloc(List<Long> numChambre, String nomBloc) {
-
         Bloc b = blocRepository.findByNomBloc(nomBloc);
         List<Chambre> chambres = new ArrayList<>();
+
         for (Long nu : numChambre) {
             Chambre chambre = chambreRepository.findByNumeroChambre(nu);
-            chambres.add(chambre);
+            if (chambre != null) {
+                chambres.add(chambre);
+            }
         }
 
         for (Chambre cha : chambres) {
-
             cha.setBloc(b);
-
             chambreRepository.save(cha);
         }
+
         return b;
     }
 
@@ -96,14 +103,12 @@ public class BlocService implements IBlocService {
     public Bloc affecterBlocAFoyer(String nomBloc, String nomFoyer) {
         Bloc b = blocRepository.findByNomBloc(nomBloc);
         Foyer f = foyerRepository.findByNomFoyer(nomFoyer);
-
         b.setFoyer(f);
         return blocRepository.save(b);
     }
 
     @Override
     public Bloc ajouterBlocEtSesChambres(Bloc b) {
-
         for (Chambre c : b.getChambres()) {
             c.setBloc(b);
             chambreRepository.save(c);
@@ -113,12 +118,8 @@ public class BlocService implements IBlocService {
 
     @Override
     public Bloc ajouterBlocEtAffecterAFoyer(Bloc b, String nomFoyer) {
-
-        Foyer f= foyerRepository.findByNomFoyer(nomFoyer);
+        Foyer f = foyerRepository.findByNomFoyer(nomFoyer);
         b.setFoyer(f);
         return blocRepository.save(b);
     }
-
-
-
 }
