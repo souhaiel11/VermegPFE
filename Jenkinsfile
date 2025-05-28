@@ -4,7 +4,7 @@ pipeline {
     environment {
         SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
         SONAR_HOST_URL = 'http://localhost:9000'
-        SONAR_LOGIN = credentials('sonar-token')
+        SONAR_LOGIN = credentials('sonar-token1')
     }
 
     stages {
