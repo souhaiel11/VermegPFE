@@ -11,6 +11,7 @@ pipeline {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://localhost:9000'
     SONAR_LOGIN       = credentials('sonar-token1')
+    BRANCH_NAME       = 'souhaielBloc'
   }
 
   stages {
@@ -43,6 +44,8 @@ pipeline {
               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
               -Dsonar.host.url=${SONAR_HOST_URL} \
               -Dsonar.login=${SONAR_LOGIN} \
+               -Dsonar.branch.name=${BRANCH_NAME} \
+
               -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
           """
         }

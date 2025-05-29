@@ -33,7 +33,6 @@ public class BlocService implements IBlocService {
         }
         return blocRepository.save(bloc);
     }
-
     @Override
     public Bloc addOrUpdate(Bloc bloc) {
         if (bloc == null) {
@@ -62,7 +61,6 @@ public class BlocService implements IBlocService {
         return blocRepository.findById(id)
                 .orElseThrow(() -> new NoSuchElementException("Bloc not found with id: " + id));
     }
-
     @Override
     public void deleteById(long id) {
         var bloc = blocRepository.findById(id)
@@ -71,7 +69,6 @@ public class BlocService implements IBlocService {
         chambreRepository.deleteAll(bloc.getChambres());
         blocRepository.delete(bloc);
     }
-
     @Override
     public void delete(Bloc bloc) {
         if (bloc == null) {
@@ -80,7 +77,6 @@ public class BlocService implements IBlocService {
         chambreRepository.deleteAll(bloc.getChambres());
         blocRepository.delete(bloc);
     }
-
     @Override
     public Bloc affecterChambresABloc(List<Long> numChambre, String nomBloc) {
         if (nomBloc == null || nomBloc.isBlank()) {
@@ -109,7 +105,6 @@ public class BlocService implements IBlocService {
 
         return bloc;
     }
-
     @Override
     public Bloc affecterBlocAFoyer(String nomBloc, String nomFoyer) {
         if (nomBloc == null || nomBloc.isBlank()) {
@@ -132,7 +127,6 @@ public class BlocService implements IBlocService {
         bloc.setFoyer(foyer);
         return blocRepository.save(bloc);
     }
-
     @Override
     public Bloc ajouterBlocEtSesChambres(Bloc bloc) {
         if (bloc == null) {
