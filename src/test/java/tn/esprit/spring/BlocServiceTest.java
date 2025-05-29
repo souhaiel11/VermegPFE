@@ -6,17 +6,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import tn.esprit.spring.Services.Bloc.BlocService;
-import tn.esprit.spring.dao.repositories.FoyerRepository;
 import tn.esprit.spring.dao.entities.Bloc;
 import tn.esprit.spring.dao.entities.Chambre;
-import tn.esprit.spring.dao.entities.TypeChambre;
 import tn.esprit.spring.dao.entities.Foyer;
+import tn.esprit.spring.dao.entities.TypeChambre;
+import tn.esprit.spring.dao.repositories.FoyerRepository;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,28 +25,41 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BlocServiceTest {
 
-    @Autowired private BlocService blocService;
-    @Autowired private FoyerRepository foyerRepository;
+    @Autowired
+    private BlocService blocService;
+
+    @Autowired
+    private FoyerRepository foyerRepository;
 
     private Bloc bloc;
     private Foyer foyer;
+    private static final String TEST_BLOC_NAME = "BlocAlpha";
+    private static final String TEST_FOYER_NAME = "FoyerTest";
 
     @BeforeAll
     void setUp() {
-        // 1) on crée et persiste un foyer
+        // 1) Create and persist test foyer
         foyer = foyerRepository.save(
                 Foyer.builder()
-                        .nomFoyer("FoyerTest")
+                        .nomFoyer(TEST_FOYER_NAME)
                         .capaciteFoyer(100)
                         .build()
         );
 
-        // 2) on crée un bloc avec 2 chambres
-        Chambre c1 = Chambre.builder().numeroChambre(101).typeC(TypeChambre.SIMPLE).build();
-        Chambre c2 = Chambre.builder().numeroChambre(102).typeC(TypeChambre.DOUBLE).build();
+        // 2) Create test bloc with 2 chambres
+        Chambre c1 = Chambre.builder()
+                .numeroChambre(101)
+                .typeC(TypeChambre.SIMPLE)
+                .build();
+
+        Chambre c2 = Chambre.builder()
+                .numeroChambre(102)
+                .typeC(TypeChambre.DOUBLE)
+                .build();
+
         bloc = blocService.addOrUpdate(
                 Bloc.builder()
-                        .nomBloc("BlocAlpha")
+                        .nomBloc(TEST_BLOC_NAME)
                         .capaciteBloc(50)
                         .chambres(Arrays.asList(c1, c2))
                         .build()
@@ -57,19 +68,19 @@ class BlocServiceTest {
 
     @Test
     @Order(1)
-    void testAddOrUpdate2_cascadeChambres() {
-        // Given - Create a new bloc with existing chambres
+    void testAddOrUpdate_cascadeChambres() {
+        // Given
         Bloc newBloc = Bloc.builder()
                 .nomBloc("Cascade")
                 .capaciteBloc(10)
                 .chambres(bloc.getChambres())
                 .build();
 
-        // When - Save with cascade
+        // When
         Bloc savedBloc = blocService.addOrUpdate(newBloc);
 
-        // Then - Verify persistence and relationships
-        assertNotNull(savedBloc.getIdBloc(), "Bloc should have an ID after save");
+        // Then
+        assertTrue(savedBloc.getIdBloc() > 0, "Bloc ID should be positive");
         assertNotNull(savedBloc.getChambres(), "Chambres list should not be null");
 
         savedBloc.getChambres().forEach(chambre -> {
@@ -79,53 +90,82 @@ class BlocServiceTest {
         });
     }
 
-
-
-    @Test @Order(3)
+    @Test
+    @Order(2)
     void testAffecterBlocAFoyer() {
-        var affected = blocService.affecterBlocAFoyer("BlocAlpha", "FoyerTest");
-        assertEquals("FoyerTest", affected.getFoyer().getNomFoyer());
+        // When
+        Bloc affected = blocService.affecterBlocAFoyer(TEST_BLOC_NAME, TEST_FOYER_NAME);
+
+        // Then
+        assertNotNull(affected.getFoyer(), "Foyer should be set");
+        assertEquals(TEST_FOYER_NAME, affected.getFoyer().getNomFoyer(),
+                "Foyer name should match");
     }
 
-    @Test @Order(4)
+    @Test
+    @Order(3)
     void testAjouterBlocEtSesChambres() {
-        Chambre c3 = Chambre.builder().numeroChambre(201).typeC(TypeChambre.TRIPLE).build();
-        var b2 = blocService.ajouterBlocEtSesChambres(
+        // Given
+        Chambre newChambre = Chambre.builder()
+                .numeroChambre(201)
+                .typeC(TypeChambre.TRIPLE)
+                .build();
+
+        // When
+        Bloc result = blocService.ajouterBlocEtSesChambres(
                 Bloc.builder()
                         .nomBloc("AddChambres")
                         .capaciteBloc(20)
-                        .chambres(List.of(c3))
+                        .chambres(List.of(newChambre))
                         .build()
         );
-        assertNotNull(b2.getIdBloc());
-        assertEquals(1, b2.getChambres().size());
+
+        // Then
+        assertTrue(result.getIdBloc() > 0, "Bloc ID should be positive");
+        assertEquals(1, result.getChambres().size(), "Should have 1 chambre");
     }
 
-    @Test @Order(5)
+    @Test
+    @Order(4)
     void testAjouterBlocEtAffecterAFoyer() {
-        var b3 = blocService.ajouterBlocEtAffecterAFoyer(
+        // When
+        Bloc result = blocService.ajouterBlocEtAffecterAFoyer(
                 Bloc.builder()
                         .nomBloc("AddAndFoyer")
                         .capaciteBloc(30)
                         .build(),
-                "FoyerTest"
+                TEST_FOYER_NAME
         );
-        assertEquals("FoyerTest", b3.getFoyer().getNomFoyer());
+
+        // Then
+        assertNotNull(result.getFoyer(), "Foyer should be set");
+        assertEquals(TEST_FOYER_NAME, result.getFoyer().getNomFoyer(),
+                "Foyer name should match");
     }
 
-    @Test @Order(6)
-    void testDeleteById_and_delete() {
-        var tmp = blocService.addOrUpdate(
-                Bloc.builder().nomBloc("ToDelete").capaciteBloc(5).build()
+    @Test
+    @Order(5)
+    void testDeleteOperations() {
+        // Given
+        Bloc tempBloc = blocService.addOrUpdate(
+                Bloc.builder()
+                        .nomBloc("ToDelete")
+                        .capaciteBloc(5)
+                        .build()
         );
-        // deleteById
-        blocService.deleteById(tmp.getIdBloc());
-        assertThrows(NoSuchElementException.class, () -> blocService.findById(tmp.getIdBloc()));
+        Long blocId = tempBloc.getIdBloc();
 
+        // When/Then for deleteById
+        blocService.deleteById(blocId);
+        assertThrows(NoSuchElementException.class,
+                () -> blocService.findById(blocId),
+                "Bloc should be deleted");
     }
 
     @AfterAll
     void tearDown() {
-        blocService.deleteById(bloc.getIdBloc());
+
+            blocService.deleteById(bloc.getIdBloc());
+
     }
 }
