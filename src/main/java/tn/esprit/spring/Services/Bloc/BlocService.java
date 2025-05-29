@@ -7,11 +7,9 @@ import tn.esprit.spring.dao.entities.Chambre;
 import tn.esprit.spring.dao.repositories.BlocRepository;
 import tn.esprit.spring.dao.repositories.ChambreRepository;
 import tn.esprit.spring.dao.repositories.FoyerRepository;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
 @Service
 @AllArgsConstructor
 public class BlocService implements IBlocService {
@@ -150,7 +148,6 @@ public class BlocService implements IBlocService {
         }
         return blocRepository.save(bloc);
     }
-
     @Override
     public Bloc ajouterBlocEtAffecterAFoyer(Bloc bloc, String nomFoyer) {
         if (bloc == null) {
