@@ -21,7 +21,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class BlocServiceMockTest {
+ class BlocServiceMockTest {
 
     @Mock
     private BlocRepository blocRepository;
@@ -45,7 +45,7 @@ public class BlocServiceMockTest {
 
     @Test
     @Order(1)
-    public void BlocServiceMockTest_createBloc() {
+     void BlocServiceMockTest_createBloc() {
         when(blocRepository.save(Mockito.any(Bloc.class))).thenReturn(bloc);
 
         Bloc savedBloc = blocService.addOrUpdate(bloc);
@@ -54,7 +54,7 @@ public class BlocServiceMockTest {
 
     @Test
     @Order(2)
-    public void BlocServiceMockTest_getAllBloc() {
+     void BlocServiceMockTest_getAllBloc() {
         when(blocRepository.findAll()).thenReturn(List.of(bloc));
 
         List<Bloc> blocs = blocService.findAll();
@@ -65,7 +65,7 @@ public class BlocServiceMockTest {
 
     @Test
     @Order(3)
-    public void BlocServiceMockTest_findById() {
+     void BlocServiceMockTest_findById() {
         when(blocRepository.findById(120L)).thenReturn(Optional.of(bloc));
 
         Bloc result = blocService.findById(120L);

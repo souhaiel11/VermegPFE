@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @SpringBootTest
-public class BlocRepoMockTest {
+ class BlocRepoMockTest {
     @Autowired
     private BlocRepository blocRepository;
     @Autowired
@@ -28,7 +28,7 @@ public class BlocRepoMockTest {
 
     @Test
     @Order(1)
-    public void blocReposetory_testadd_SaveBloc () {
+     void blocReposetory_testadd_SaveBloc () {
         //Arrange
         Bloc bloc = Bloc.builder().nomBloc("Bloc Alpha").capaciteBloc(150).build();
         //Act
@@ -41,7 +41,7 @@ public class BlocRepoMockTest {
     }
 
     @Test
-    public void blocReposetory_test_GetAllBloc () {
+     void blocReposetory_test_GetAllBloc () {
         //Arrange
         Bloc bloc = Bloc.builder().nomBloc("Bloc Alpha").capaciteBloc(150).build();
         Bloc bloc1 = Bloc.builder().nomBloc("Bloc Beta").capaciteBloc(160).build();
