@@ -1,3 +1,9 @@
+def COLOR_MAP = [
+    'SUCCESS': 'good',
+    'FAILURE': 'danger',
+]
+
+
 pipeline {
     agent any
 
@@ -71,4 +77,13 @@ pipeline {
             echo "❌ Le pipeline a échoué. Vérifie les erreurs dans la console Jenkins."
         }
     }
+    post {
+            always {
+                echo 'Slack Notifications.'
+                slackSend channel: '#souhaiel',
+                    color: COLOR_MAP[currentBuild.currentResult],
+                    message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+            }
+        }
+
 }
