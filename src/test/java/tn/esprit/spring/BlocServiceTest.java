@@ -1,10 +1,12 @@
 package tn.esprit.spring;
 
 import org.junit.jupiter.api.*;
+import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit4.SpringRunner;
 import tn.esprit.spring.Services.Bloc.BlocService;
 import tn.esprit.spring.dao.entities.Bloc;
 import tn.esprit.spring.dao.entities.Chambre;
@@ -18,11 +20,13 @@ import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+
 @ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
-@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+@RunWith(SpringRunner.class)
+@TestMethodOrder(MethodOrderer.class)
+@SpringBootTest
 class BlocServiceTest {
 
     @Autowired
