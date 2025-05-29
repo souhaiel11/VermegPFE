@@ -40,7 +40,7 @@ public class BlocService implements IBlocService {
     @Override
     public Bloc addOrUpdate(Bloc bloc) {
         if (bloc == null) {
-            throw new IllegalArgumentException("Bloc cannot be null");
+            throw new IllegalArgumentException("Bloc null");
         }
 
         List<Chambre> chambres = bloc.getChambres();
@@ -78,7 +78,7 @@ public class BlocService implements IBlocService {
     @Override
     public void delete(Bloc bloc) {
         if (bloc == null) {
-            throw new IllegalArgumentException("Bloc cannot be null");
+            throw new IllegalArgumentException("null");
         }
         chambreRepository.deleteAll(bloc.getChambres());
         blocRepository.delete(bloc);
@@ -139,7 +139,7 @@ public class BlocService implements IBlocService {
     @Override
     public Bloc ajouterBlocEtSesChambres(Bloc bloc) {
         if (bloc == null) {
-            throw new IllegalArgumentException("Bloc cannot be null");
+            throw new IllegalArgumentException(" cannot null");
         }
 
         var chambres = bloc.getChambres();
@@ -155,7 +155,7 @@ public class BlocService implements IBlocService {
     @Override
     public Bloc ajouterBlocEtAffecterAFoyer(Bloc bloc, String nomFoyer) {
         if (bloc == null) {
-            throw new IllegalArgumentException("Bloc cannot be null");
+            throw new IllegalArgumentException("verifier blocl");
         }
         if (nomFoyer == null || nomFoyer.isBlank()) {
             throw new IllegalArgumentException("NomFoyer cannot be null or empty");
