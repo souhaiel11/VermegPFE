@@ -2,6 +2,7 @@ package tn.esprit.spring.Services.Foyer;
 
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.spring.dao.entities.Bloc;
 import tn.esprit.spring.dao.entities.Foyer;
 import tn.esprit.spring.dao.entities.Universite;
@@ -10,101 +11,130 @@ import tn.esprit.spring.dao.repositories.FoyerRepository;
 import tn.esprit.spring.dao.repositories.UniversiteRepository;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @AllArgsConstructor
+@Transactional
 public class FoyerService implements IFoyerService {
+
     private final FoyerRepository foyerRepository;
-    FoyerRepository repo;
-    UniversiteRepository universiteRepository;
-    BlocRepository blocRepository;
+    private final UniversiteRepository universiteRepository;
+    private final BlocRepository blocRepository;
 
     @Override
-    public Foyer addOrUpdate(Foyer f) {
-        return repo.save(f);
+    public Foyer addOrUpdate(Foyer foyer) {
+        if (foyer == null) {
+            throw new IllegalArgumentException("Foyer cannot be null");
+        }
+        return foyerRepository.save(foyer);
     }
 
     @Override
     public List<Foyer> findAll() {
-        return repo.findAll();
+        return foyerRepository.findAll();
     }
 
     @Override
     public Foyer findById(long id) {
-        return repo.findById(id).get();
+        return foyerRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Foyer not found with id: " + id));
     }
 
     @Override
     public void deleteById(long id) {
-        repo.deleteById(id);
+        if (!foyerRepository.existsById(id)) {
+            throw new NoSuchElementException("Foyer not found with id: " + id);
+        }
+        foyerRepository.deleteById(id);
     }
 
     @Override
-    public void delete(Foyer f) {
-        repo.delete(f);
+    public void delete(Foyer foyer) {
+        if (foyer == null) {
+            throw new IllegalArgumentException("Foyer cannot be null");
+        }
+        foyerRepository.delete(foyer);
     }
 
     @Override
     public Universite affecterFoyerAUniversite(long idFoyer, String nomUniversite) {
-        Foyer f = findById(idFoyer); // Child
-        Universite u = universiteRepository.findByNomUniversite(nomUniversite); // Parent
-        // On affecte le child au parent
-        u.setFoyer(f);
-        return universiteRepository.save(u);
-    }
+        if (nomUniversite == null || nomUniversite.isBlank()) {
+            throw new IllegalArgumentException("University name cannot be null or empty");
+        }
 
+        Foyer foyer = findById(idFoyer);
+        Universite universite = universiteRepository.findByNomUniversite(nomUniversite);
+
+        if (universite == null) {
+            throw new NoSuchElementException("University not found with name: " + nomUniversite);
+        }
+
+        universite.setFoyer(foyer);
+        return universiteRepository.save(universite);
+    }
 
     @Override
     public Foyer ajouterFoyerEtAffecterAUniversite(Foyer foyer, long idUniversite) {
-        // Récuperer la liste des blocs avant de faire l'ajout
-        List<Bloc> blocs = foyer.getBlocs();
-        // Foyer est le child et universite est parent
-        Foyer f = repo.save(foyer);
-        Universite u = universiteRepository.findById(idUniversite).get();
-        // Foyer est le child et bloc est le parent
-        //On affecte le child au parent
-        for (Bloc bloc : blocs) {
-            bloc.setFoyer(foyer);
-            blocRepository.save(bloc);
+        if (foyer == null) {
+            throw new IllegalArgumentException("Foyer cannot be null");
         }
-        u.setFoyer(f);
-        return universiteRepository.save(u).getFoyer();
+
+        List<Bloc> blocs = foyer.getBlocs();
+        Foyer savedFoyer = foyerRepository.save(foyer);
+
+        Universite universite = universiteRepository.findById(idUniversite)
+                .orElseThrow(() -> new NoSuchElementException("University not found with id: " + idUniversite));
+
+        if (blocs != null) {
+            blocs.forEach(bloc -> {
+                bloc.setFoyer(savedFoyer);
+                blocRepository.save(bloc);
+            });
+        }
+
+        universite.setFoyer(savedFoyer);
+        universiteRepository.save(universite);
+        return savedFoyer;
     }
 
     @Override
     public Foyer ajoutFoyerEtBlocs(Foyer foyer) {
-        //Foyer child / Bloc parent
-        //Objet foyer = attribut objet foyer + les blocs associés
-//        Foyer f = repo.save(foyer);
-//        for (Bloc b : foyer.getBlocs()) {
-//            b.setFoyer(f);
-//            blocRepository.save(b);
-//        }
-//        return f;
-        //-----------------------------------------
-        List<Bloc> blocs = foyer.getBlocs();
-        foyer = repo.save(foyer);
-        for (Bloc b : blocs) {
-            b.setFoyer(foyer);
-            blocRepository.save(b);
+        if (foyer == null) {
+            throw new IllegalArgumentException("Foyer cannot be null");
         }
-        return foyer;
+
+        List<Bloc> blocs = foyer.getBlocs();
+        Foyer savedFoyer = foyerRepository.save(foyer);
+
+        if (blocs != null) {
+            blocs.forEach(bloc -> {
+                bloc.setFoyer(savedFoyer);
+                blocRepository.save(bloc);
+            });
+        }
+
+        return savedFoyer;
     }
 
     @Override
-    public Universite affecterFoyerAUniversite(long idF, long idU) {
-        Universite u= universiteRepository.findById(idU).get();
-        Foyer f= foyerRepository.findById(idF).get();
-        u.setFoyer(f);
-        return universiteRepository.save(u);
+    public Universite affecterFoyerAUniversite(long idFoyer, long idUniversite) {
+        Universite universite = universiteRepository.findById(idUniversite)
+                .orElseThrow(() -> new NoSuchElementException("University not found with id: " + idUniversite));
+
+        Foyer foyer = foyerRepository.findById(idFoyer)
+                .orElseThrow(() -> new NoSuchElementException("Foyer not found with id: " + idFoyer));
+
+        universite.setFoyer(foyer);
+        return universiteRepository.save(universite);
     }
 
     @Override
     public Universite desaffecterFoyerAUniversite(long idUniversite) {
-        Universite u = universiteRepository.findById(idUniversite).get(); // Parent
-        u.setFoyer(null);
-        return universiteRepository.save(u);
+        Universite universite = universiteRepository.findById(idUniversite)
+                .orElseThrow(() -> new NoSuchElementException("University not found with id: " + idUniversite));
+
+        universite.setFoyer(null);
+        return universiteRepository.save(universite);
     }
-
-
 }
