@@ -11,44 +11,49 @@ import tn.esprit.spring.dao.repositories.FoyerRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @AllArgsConstructor
 public class BlocService implements IBlocService {
 
-    ChambreRepository chambreRepository;
-    BlocRepository blocRepository;
-    FoyerRepository foyerRepository;
+    private final ChambreRepository chambreRepository;
+    private final BlocRepository blocRepository;
+    private final FoyerRepository foyerRepository;
 
     @Override
-    public Bloc addOrUpdate2(Bloc b) { //Cascade
-        List<Chambre> chambres = b.getChambres();
-        for (Chambre c : chambres) {
-            c.setBloc(b);
-            chambreRepository.save(c);
+    public Bloc addOrUpdate2(Bloc bloc) {
+        if (bloc == null) {
+            throw new IllegalArgumentException("Bloc cannot be null");
         }
-        return b;
+
+        List<Chambre> chambres = bloc.getChambres();
+        if (chambres != null) {
+            chambres.forEach(chambre -> {
+                chambre.setBloc(bloc);
+                chambreRepository.save(chambre);
+            });
+        }
+        return blocRepository.save(bloc);
     }
 
     @Override
-    public Bloc addOrUpdate(Bloc b) {
-        List<Chambre> chambres = b.getChambres();
+    public Bloc addOrUpdate(Bloc bloc) {
+        if (bloc == null) {
+            throw new IllegalArgumentException("Bloc cannot be null");
+        }
 
-        b.setChambres(null);
-
-        Bloc savedBloc = blocRepository.save(b);
+        List<Chambre> chambres = bloc.getChambres();
+        bloc.setChambres(null);
+        var savedBloc = blocRepository.save(bloc);
 
         if (chambres != null) {
-            for (Chambre chambre : chambres) {
-                chambre.setBloc(savedBloc);
-            }
+            chambres.forEach(chambre -> chambre.setBloc(savedBloc));
             savedBloc.setChambres(chambres);
             blocRepository.save(savedBloc);
         }
-
         return savedBloc;
     }
-
 
     @Override
     public List<Bloc> findAll() {
@@ -57,66 +62,112 @@ public class BlocService implements IBlocService {
 
     @Override
     public Bloc findById(long id) {
-        return blocRepository.findById(id).get();
+        return blocRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Bloc not found with id: " + id));
     }
 
     @Override
     public void deleteById(long id) {
-        Bloc b =blocRepository.findById(id).get();
-        chambreRepository.deleteAll(b.getChambres());
-        blocRepository.delete(b);
+        var bloc = blocRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Bloc not found with id: " + id));
+
+        chambreRepository.deleteAll(bloc.getChambres());
+        blocRepository.delete(bloc);
     }
 
     @Override
-    public void delete(Bloc b) {
-        chambreRepository.deleteAll(b.getChambres());
-        blocRepository.delete(b);
+    public void delete(Bloc bloc) {
+        if (bloc == null) {
+            throw new IllegalArgumentException("Bloc cannot be null");
+        }
+        chambreRepository.deleteAll(bloc.getChambres());
+        blocRepository.delete(bloc);
     }
 
     @Override
     public Bloc affecterChambresABloc(List<Long> numChambre, String nomBloc) {
-
-        Bloc b = blocRepository.findByNomBloc(nomBloc);
-        List<Chambre> chambres = new ArrayList<>();
-        for (Long nu : numChambre) {
-            Chambre chambre = chambreRepository.findByNumeroChambre(nu);
-            chambres.add(chambre);
+        if (nomBloc == null || nomBloc.isBlank()) {
+            throw new IllegalArgumentException("NomBloc cannot be null or empty");
         }
 
-        for (Chambre cha : chambres) {
-
-            cha.setBloc(b);
-
-            chambreRepository.save(cha);
+        var bloc = blocRepository.findByNomBloc(nomBloc);
+        if (bloc == null) {
+            throw new NoSuchElementException("Bloc not found with name: " + nomBloc);
         }
-        return b;
+
+        var chambres = new ArrayList<Chambre>();
+        if (numChambre != null) {
+            numChambre.forEach(num -> {
+                var chambre = chambreRepository.findByNumeroChambre(num);
+                if (chambre != null) {
+                    chambres.add(chambre);
+                }
+            });
+        }
+
+        chambres.forEach(chambre -> {
+            chambre.setBloc(bloc);
+            chambreRepository.save(chambre);
+        });
+
+        return bloc;
     }
 
     @Override
     public Bloc affecterBlocAFoyer(String nomBloc, String nomFoyer) {
-        Bloc b = blocRepository.findByNomBloc(nomBloc);
-        Foyer f = foyerRepository.findByNomFoyer(nomFoyer);
-
-        b.setFoyer(f);
-        return blocRepository.save(b);
-    }
-
-    @Override
-    public Bloc ajouterBlocEtSesChambres(Bloc b) {
-
-        for (Chambre c : b.getChambres()) {
-            c.setBloc(b);
-            chambreRepository.save(c);
+        if (nomBloc == null || nomBloc.isBlank()) {
+            throw new IllegalArgumentException("NomBloc cannot be null or empty");
         }
-        return b;
+        if (nomFoyer == null || nomFoyer.isBlank()) {
+            throw new IllegalArgumentException("NomFoyer cannot be null or empty");
+        }
+
+        var bloc = blocRepository.findByNomBloc(nomBloc);
+        if (bloc == null) {
+            throw new NoSuchElementException("Bloc not found with name: " + nomBloc);
+        }
+
+        var foyer = foyerRepository.findByNomFoyer(nomFoyer);
+        if (foyer == null) {
+            throw new NoSuchElementException("Foyer not found with name: " + nomFoyer);
+        }
+
+        bloc.setFoyer(foyer);
+        return blocRepository.save(bloc);
     }
 
     @Override
-    public Bloc ajouterBlocEtAffecterAFoyer(Bloc b, String nomFoyer) {
+    public Bloc ajouterBlocEtSesChambres(Bloc bloc) {
+        if (bloc == null) {
+            throw new IllegalArgumentException("Bloc cannot be null");
+        }
 
-        Foyer f= foyerRepository.findByNomFoyer(nomFoyer);
-        b.setFoyer(f);
-        return blocRepository.save(b);
+        var chambres = bloc.getChambres();
+        if (chambres != null) {
+            chambres.forEach(chambre -> {
+                chambre.setBloc(bloc);
+                chambreRepository.save(chambre);
+            });
+        }
+        return blocRepository.save(bloc);
+    }
+
+    @Override
+    public Bloc ajouterBlocEtAffecterAFoyer(Bloc bloc, String nomFoyer) {
+        if (bloc == null) {
+            throw new IllegalArgumentException("Bloc cannot be null");
+        }
+        if (nomFoyer == null || nomFoyer.isBlank()) {
+            throw new IllegalArgumentException("NomFoyer cannot be null or empty");
+        }
+
+        var foyer = foyerRepository.findByNomFoyer(nomFoyer);
+        if (foyer == null) {
+            throw new NoSuchElementException("Foyer not found with name: " + nomFoyer);
+        }
+
+        bloc.setFoyer(foyer);
+        return blocRepository.save(bloc);
     }
 
 
