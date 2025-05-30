@@ -1,0 +1,10 @@
+# Dockerfile.testdb
+FROM mysql:8.0
+ENV MYSQL_DATABASE=testdb
+ENV MYSQL_USER=user
+ENV MYSQL_PASSWORD=pass
+ENV MYSQL_ALLOW_EMPTY_PASSWORD=yes
+
+EXPOSE 3306
+
+VOLUME ["/var/lib/mysql"]

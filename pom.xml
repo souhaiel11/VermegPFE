@@ -89,7 +89,7 @@
     <distributionManagement>
         <snapshotRepository>
             <id>deploymentRepo</id>
-            <url>http://localhost:8081/repository/maven-snapshots/</url>
+            <url>http://172.31.172.61:8081/repository/Devops-Souhaiel-SNAPSHOT//</url>
         </snapshotRepository>
     </distributionManagement>
 
