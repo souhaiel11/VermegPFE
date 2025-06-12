@@ -1,7 +1,7 @@
 def COLOR_MAP = [
-  SUCCESS: 'good',
+  SUCCESS : 'good',
   UNSTABLE: 'warning',
-  FAILURE: 'danger'
+  FAILURE : 'danger'
 ]
 
 pipeline {
@@ -11,19 +11,11 @@ pipeline {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://localhost:9000'
     SONAR_LOGIN       = credentials('sonar-token1')
+    DOCKER_IMAGE      = 'SouhaielBlocc'
+
   }
 
   stages {
-    stage('🐳 Lancer les bases de données') {
-      steps {
-        script {
-          echo "📦 Lancement des containers MySQL..."
-          sh 'docker-compose -f src/main/docker/docker-compose.yml up -d'
-          echo '⏳ Attente de 15s que les bases démarrent...'
-          sleep(time: 15, unit: 'SECONDS')
-        }
-      }
-    }
 
     stage('🧹 Nettoyage') {
       steps {
@@ -64,25 +56,14 @@ pipeline {
       steps {
         withSonarQubeEnv('MySonarServer') {
           sh """
-            mvn sonar:sonar \
-              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-              -Dsonar.host.url=${SONAR_HOST_URL} \
+            mvn sonar:sonar \\
+              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
+              -Dsonar.host.url=${SONAR_HOST_URL} \\
               -Dsonar.login=${SONAR_LOGIN}
           """
         }
       }
     }
-
-    // Décommenter si tu veux activer le Quality Gate bloquant
-    /*
-    stage('🛡️ Quality Gate') {
-      steps {
-        timeout(time: 1, unit: 'HOURS') {
-          waitForQualityGate abortPipeline: true
-        }
-      }
-    }
-    */
 
     stage('📤 Déploiement Nexus') {
       steps {
@@ -90,6 +71,45 @@ pipeline {
         sh 'mvn deploy -DskipTests'
       }
     }
+
+    stage('🗂️ Trouver JAR') {
+      steps {
+        script {
+          def jar = sh(script: 'ls target/*.jar | grep -v original | head -n 1', returnStdout: true).trim()
+          env.JAR_NAME = jar.replaceAll('target/', '')
+          echo "🗂️ JAR détecté : ${env.JAR_NAME}"
+        }
+      }
+    }
+
+    stage('🐳 Build Docker Image') {
+      steps {
+        echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
+        sh "docker build -f Dockerfile --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
+      }
+    }
+
+    stage('📤 Docker Push') {
+      steps {
+        echo '📤 Pushing Docker image to Docker Hub...'
+        withCredentials([usernamePassword(credentialsId: 'dockerHub', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
+          sh """
+            echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
+            docker tag ${DOCKER_IMAGE}:latest ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest
+            docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest
+          """
+        }
+      }
+    }
+
+    stage('🚀 Docker Compose Deploy') {
+      steps {
+        echo '🚀 Déploiement avec Docker Compose...'
+        sh 'docker-compose -f src/main/docker/docker-compose.yml down || true'
+        sh 'docker-compose -f src/main/docker/docker-compose.yml up -d --build'
+      }
+    }
+
   }
 
   post {
@@ -101,12 +121,13 @@ pipeline {
     }
     always {
       echo "📦 Arrêt des containers Docker..."
-     sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true'
+      sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true'
 
-
-      slackSend channel: '#souhaiel',
-                color: COLOR_MAP[currentBuild.currentResult] ?: 'warning',
-                message: "*${currentBuild.currentResult}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nMore info: ${env.BUILD_URL}"
+      slackSend(
+        channel: '#souhaiel',
+        color: COLOR_MAP[currentBuild.currentResult] ?: 'warning',
+        message: "*${currentBuild.currentResult}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nMore info: ${env.BUILD_URL}"
+      )
     }
   }
 }
