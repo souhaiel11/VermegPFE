@@ -15,21 +15,7 @@ services:
     volumes:
       - foyer_db_data:/var/lib/mysql
 
-  test-db:
-    image: my-test-db
-    build:
-      context: .
-      dockerfile: test.Dockerfile
-    container_name: test-db
-    ports:
-      - '3307:3306'
-    environment:
-      MYSQL_DATABASE: testdb
-      MYSQL_USER: user
-      MYSQL_PASSWORD: pass
-      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
-    volumes:
-      - testdb_data:/var/lib/mysql
+
 
 volumes:
   foyer_db_data:
