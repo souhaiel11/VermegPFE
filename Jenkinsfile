@@ -11,7 +11,7 @@ pipeline {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://localhost:9000'
     SONAR_LOGIN       = credentials('sonar-token1')
-    DOCKER_IMAGE      = 'SouhaielBlocc'
+    DOCKER_IMAGE      = 'souhaielbloc'
 
   }
 
