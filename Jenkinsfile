@@ -85,7 +85,7 @@ pipeline {
     stage('🐳 Build Docker Image') {
       steps {
         echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
-        sh "docker build -f Dockerfile --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
+        sh "docker build -f src/main/docker/Dockerfile --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
 
