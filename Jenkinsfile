@@ -101,7 +101,8 @@ pipeline {
     }
     always {
       echo "📦 Arrêt des containers Docker..."
-       sh 'docker-compose -f src/main/docker/docker-compose.yml down -d'
+     sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true'
+
 
       slackSend channel: '#souhaiel',
                 color: COLOR_MAP[currentBuild.currentResult] ?: 'warning',
