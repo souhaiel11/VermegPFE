@@ -18,7 +18,7 @@ pipeline {
       steps {
         script {
           echo "📦 Lancement des containers MySQL..."
-          sh 'docker-compose up -d'
+          sh 'docker-compose -f src/main/docker/docker-compose.yml up -d'
           echo '⏳ Attente de 15s que les bases démarrent...'
           sleep(time: 15, unit: 'SECONDS')
         }
