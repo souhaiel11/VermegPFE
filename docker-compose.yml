@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  foyer-db:
+    image: mysql:8
+    container_name: foyer-db
+    environment:
+      MYSQL_DATABASE: foyer
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  springboot-app:
+    image: souhaielbloc:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: springboot-app
+    ports:
+      - '8086:8086'
+    depends_on:
+      - foyer-db
+
+volumes:
+  foyer_db_data:
+  mysql_data:
