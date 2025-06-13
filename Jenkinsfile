@@ -32,17 +32,17 @@ pipeline {
 
     stage('🧪 Tests') {
       steps {
-        echo "▶️ Tests unitaires et d’intégration"
+        echo "▶️ Lancement des tests unitaires"
         sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
       }
     }
 
-    stage('📦 Packaging & JAR Detection') {
+    stage('📦 Packaging + JAR Detection') {
       steps {
         echo "📦 Packaging avec skipTests"
         sh 'mvn package -DskipTests'
         script {
-          def jar = sh(script: "ls target/*.jar | grep -v 'original' | head -n 1", returnStdout: true).trim()
+          def jar = sh(script: "ls target/*.jar | grep -v original | head -n 1", returnStdout: true).trim()
           env.JAR_NAME = jar.replaceAll('target/', '')
           echo "🗂️ JAR détecté : ${env.JAR_NAME}"
         }
@@ -64,21 +64,21 @@ pipeline {
 
     stage('📤 Déploiement Nexus') {
       steps {
-        echo "🚀 Déploiement vers Nexus..."
+        echo "🚀 Déploiement vers Nexus"
         sh 'mvn deploy -DskipTests'
       }
     }
 
-    stage('🐳 Build Docker Image') {
+    stage('🐳 Docker Build') {
       steps {
-        echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
+        echo "📦 Build de l'image Docker avec ${env.JAR_NAME}..."
         sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
 
     stage('📤 Docker Push') {
       steps {
-        echo '📤 Pushing Docker image to Docker Hub...'
+        echo '📤 Envoi de l’image vers Docker Hub...'
         withCredentials([usernamePassword(credentialsId: 'dockerHub', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
           sh """
             echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
@@ -91,9 +91,9 @@ pipeline {
 
     stage('🚀 Docker Compose Deploy') {
       steps {
-        echo '🚀 Déploiement avec Docker Compose...'
-        sh 'docker-compose -f src/main/docker/docker-compose.yml down || true'
-        sh 'docker-compose -f src/main/docker/docker-compose.yml up -d --build'
+        echo '🚀 Déploiement avec Docker Compose'
+        sh 'docker-compose down || true'
+        sh 'docker-compose up -d --build'
       }
     }
   }
@@ -108,11 +108,11 @@ pipeline {
           subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
             <p><b>Jenkins Pipeline Notification</b></p>
-            <p>📌 <b>Project</b>: ${env.JOB_NAME}</p>
-            <p>🔢 <b>Build Number</b>: ${env.BUILD_NUMBER}</p>
-            <p>📊 <b>Status</b>: ${buildStatus}</p>
-            <p>👤 <b>Started by</b>: ${buildUser}</p>
-            <p>🔗 <b>URL</b>: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+            <p>📌 <b>Projet</b>: ${env.JOB_NAME}</p>
+            <p>🔢 <b>Build</b>: #${env.BUILD_NUMBER}</p>
+            <p>📊 <b>Statut</b>: ${buildStatus}</p>
+            <p>👤 <b>Déclenché par</b>: ${buildUser}</p>
+            <p>🔗 <a href="${env.BUILD_URL}">Voir sur Jenkins</a></p>
             <p>💬 YA SOU YA M3ALLLLLEM</p>
           """,
           to: 'amrisouhail96@gmail.com',
