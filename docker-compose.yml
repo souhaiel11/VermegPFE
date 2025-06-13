@@ -14,9 +14,6 @@ services:
 
   springboot-app:
     image: souhaielbloc:latest
-    build:
-      context: .           # <- Contexte = racine
-      dockerfile: Dockerfile
     container_name: springboot-app
     ports:
       - '8086:8086'
