@@ -40,7 +40,7 @@ pipeline {
     stage('📦 Packaging') {
       steps {
         echo "📦 Packaging avec skipTests"
-        sh 'mvn package -DskipTests -e'
+        sh 'mvn package -DskipTests'
       }
     }
 
@@ -83,13 +83,15 @@ pipeline {
     stage('🐳 Build Docker Image') {
       steps {
         echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
-        sh "docker build -f src/main/docker/Dockerfile --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
+        dir('src/main/docker') {
+          sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
+        }
       }
     }
 
     stage('📤 Docker Push') {
       steps {
-        echo '📤 Envoi de l’image vers Docker Hub...'
+        echo '📤 Pushing Docker image to Docker Hub...'
         withCredentials([usernamePassword(credentialsId: 'dockerHub', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
           sh """
             echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
@@ -117,15 +119,14 @@ pipeline {
         def buildStatus = currentBuild.currentResult
         def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
 
-        // 📧 Notification Email
         emailext(
           subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
             <p><b>Jenkins Pipeline Notification</b></p>
-            <p>📌 <b>Projet</b>: ${env.JOB_NAME}</p>
-            <p>🔢 <b>Build</b>: ${env.BUILD_NUMBER}</p>
-            <p>📊 <b>Statut</b>: ${buildStatus}</p>
-            <p>👤 <b>Lancé par</b>: ${buildUser}</p>
+            <p>📌 <b>Project</b>: ${env.JOB_NAME}</p>
+            <p>🔢 <b>Build Number</b>: ${env.BUILD_NUMBER}</p>
+            <p>📊 <b>Status</b>: ${buildStatus}</p>
+            <p>👤 <b>Started by</b>: ${buildUser}</p>
             <p>🔗 <b>URL</b>: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
             <p>💬 YA SOU YA M3ALLLLLEM</p>
           """,
@@ -135,7 +136,6 @@ pipeline {
           mimeType: 'text/html'
         )
 
-        // 💬 Slack Notification
         slackSend(
           channel: '#souhaiel',
           color: COLOR_MAP[buildStatus] ?: 'warning',
