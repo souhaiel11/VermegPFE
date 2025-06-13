@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@ActiveProfiles("test")
+//@ActiveProfiles("test")
 @TestPropertySource("classpath:application-test.properties")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @RunWith(SpringRunner.class)
