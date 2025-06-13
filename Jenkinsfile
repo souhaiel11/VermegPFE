@@ -37,26 +37,15 @@ pipeline {
       }
     }
 
-    stage('📦 Packaging') {
+    stage('📦 Packaging & Détection JAR') {
       steps {
         echo "📦 Packaging avec skipTests"
         sh 'mvn package -DskipTests'
-      }
-    }
-
-    stage('🗂️ Trouver JAR') {
-      steps {
         script {
           def jar = sh(script: 'ls target/*.jar | grep -v original | head -n 1', returnStdout: true).trim()
           env.JAR_NAME = jar.replaceAll('target/', '')
           echo "🗂️ JAR détecté : ${env.JAR_NAME}"
         }
-      }
-    }
-
-    stage('📂 Copier le .jar dans src/main/docker') {
-      steps {
-        sh "cp target/${env.JAR_NAME} src/main/docker/"
       }
     }
 
@@ -83,9 +72,7 @@ pipeline {
     stage('🐳 Build Docker Image') {
       steps {
         echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
-        dir('src/main/docker') {
-          sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
-        }
+        sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -f src/main/docker/Dockerfile -t ${DOCKER_IMAGE}:latest ."
       }
     }
 
