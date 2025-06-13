@@ -97,26 +97,12 @@ pipeline {
     stage('🚀 Docker Compose Deploy') {
   steps {
     echo '🚀 Déploiement avec Docker Compose...'
-    dir('.') { 
-      sh 'docker-compose -f src/main/docker/docker-compose.yml down || true'
-      sh 'docker-compose -f src/main/docker/docker-compose.yml up -d --build'
-    }
-  }
-}
-
-
-
-    stage('🚀 Docker Compose Deploy') {
-  steps {
-    echo '🚀 Déploiement avec Docker Compose...'
     dir('.') {  // 🟢 Exécuter depuis la racine du projet
       sh 'docker-compose -f src/main/docker/docker-compose.yml down || true'
       sh 'docker-compose -f src/main/docker/docker-compose.yml up -d --build'
     }
   }
 }
-
-    
 
   }
 
