@@ -1,0 +1,8 @@
+FROM mysql:8.0
+
+ENV MYSQL_DATABASE=foyer
+ENV MYSQL_ALLOW_EMPTY_PASSWORD=yes
+
+EXPOSE 3306
+
+VOLUME ["/var/lib/mysql"]
