@@ -98,16 +98,16 @@ pipeline {
         }
       }
     }
-
-    stage('🚀 Docker Compose Deploy') {
+stage('🚀 Docker Compose Deploy') {
   steps {
     echo '🚀 Déploiement avec Docker Compose...'
-    dir('.') { 
-      sh 'docker-compose -f src/main/docker/docker-compose.yml down || true'
-      sh 'docker-compose -f src/main/docker/docker-compose.yml up -d --build'
+    dir('src/main/docker') {
+      sh 'docker-compose down || true'
+      sh 'docker-compose up -d --build'
     }
   }
 }
+
 
   }
 
