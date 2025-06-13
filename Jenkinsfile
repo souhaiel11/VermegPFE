@@ -84,7 +84,13 @@ pipeline {
 
     stage('🚀 Docker Compose') {
       steps {
+        echo "🛠️ Suppression de l'ancien conteneur 'foyer-db' si nécessaire..."
+        sh 'docker rm -f foyer-db || true'
+
+        echo '🧹 Nettoyage avec docker-compose...'
         sh 'docker-compose down --volumes --remove-orphans || true'
+
+        echo '🚀 Démarrage avec docker-compose...'
         sh 'docker-compose up -d --build'
       }
     }
