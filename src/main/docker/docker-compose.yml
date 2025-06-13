@@ -17,6 +17,9 @@ services:
 
   springboot-app:
     image: souhaielbloc:latest
+    build:
+      context: ../../
+      dockerfile: src/main/docker/Dockerfile
     container_name: springboot-app
     ports:
       - '8086:8086'
