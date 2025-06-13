@@ -43,11 +43,22 @@ pipeline {
         sh 'mvn package -DskipTests -e'
       }
     }
-   stage('📂 Copier le .jar dans src/main/docker') {
-     steps {
-       sh 'cp target/${JAR_NAME} src/main/docker/'
-  }
-}
+
+    stage('🗂️ Trouver JAR') {
+      steps {
+        script {
+          def jar = sh(script: 'ls target/*.jar | grep -v original | head -n 1', returnStdout: true).trim()
+          env.JAR_NAME = jar.replaceAll('target/', '')
+          echo "🗂️ JAR détecté : ${env.JAR_NAME}"
+        }
+      }
+    }
+
+    stage('📂 Copier le .jar dans src/main/docker') {
+      steps {
+        sh "cp target/${env.JAR_NAME} src/main/docker/"
+      }
+    }
 
     stage('🔍 Analyse SonarQube') {
       steps {
@@ -69,16 +80,6 @@ pipeline {
       }
     }
 
-    stage('🗂️ Trouver JAR') {
-      steps {
-        script {
-          def jar = sh(script: 'ls target/*.jar | grep -v original | head -n 1', returnStdout: true).trim()
-          env.JAR_NAME = jar.replaceAll('target/', '')
-          echo "🗂️ JAR détecté : ${env.JAR_NAME}"
-        }
-      }
-    }
-
     stage('🐳 Build Docker Image') {
       steps {
         echo "📦 Construction de l'image Docker avec ${env.JAR_NAME}..."
@@ -88,7 +89,7 @@ pipeline {
 
     stage('📤 Docker Push') {
       steps {
-        echo '📤 Pushing Docker image to Docker Hub...'
+        echo '📤 Envoi de l’image vers Docker Hub...'
         withCredentials([usernamePassword(credentialsId: 'dockerHub', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
           sh """
             echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
@@ -98,17 +99,16 @@ pipeline {
         }
       }
     }
-stage('🚀 Docker Compose Deploy') {
-  steps {
-    echo '🚀 Déploiement avec Docker Compose...'
-    dir('src/main/docker') {
-      sh 'docker-compose down || true'
-      sh 'docker-compose up -d --build'
+
+    stage('🚀 Docker Compose Deploy') {
+      steps {
+        echo '🚀 Déploiement avec Docker Compose...'
+        dir('src/main/docker') {
+          sh 'docker-compose down || true'
+          sh 'docker-compose up -d --build'
+        }
+      }
     }
-  }
-}
-
-
   }
 
   post {
@@ -117,15 +117,15 @@ stage('🚀 Docker Compose Deploy') {
         def buildStatus = currentBuild.currentResult
         def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
 
-        // ✉️ Email Notification
+        // 📧 Notification Email
         emailext(
           subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
             <p><b>Jenkins Pipeline Notification</b></p>
-            <p>📌 <b>Project</b>: ${env.JOB_NAME}</p>
-            <p>🔢 <b>Build Number</b>: ${env.BUILD_NUMBER}</p>
-            <p>📊 <b>Status</b>: ${buildStatus}</p>
-            <p>👤 <b>Started by</b>: ${buildUser}</p>
+            <p>📌 <b>Projet</b>: ${env.JOB_NAME}</p>
+            <p>🔢 <b>Build</b>: ${env.BUILD_NUMBER}</p>
+            <p>📊 <b>Statut</b>: ${buildStatus}</p>
+            <p>👤 <b>Lancé par</b>: ${buildUser}</p>
             <p>🔗 <b>URL</b>: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
             <p>💬 YA SOU YA M3ALLLLLEM</p>
           """,
