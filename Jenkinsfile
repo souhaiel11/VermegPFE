@@ -12,7 +12,6 @@ pipeline {
     SONAR_HOST_URL    = 'http://localhost:9000'
     SONAR_LOGIN       = credentials('sonar-token1')
     DOCKER_IMAGE      = 'souhaielbloc'
-
   }
 
   stages {
@@ -31,13 +30,12 @@ pipeline {
       }
     }
 
-  stage('🧪 Tests') {
-    steps {
-      echo "▶️ Tests unitaires et d’intégration"
-      sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
+    stage('🧪 Tests') {
+      steps {
+        echo "▶️ Tests unitaires et d’intégration"
+        sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
+      }
     }
-  }
-
 
     stage('📦 Packaging') {
       steps {
@@ -107,48 +105,36 @@ pipeline {
   }
 
   post {
-    success {
-      echo "✅ Pipeline exécuté avec succès"
-    }
-    failure {
-      echo "❌ Le pipeline a échoué. Vérifiez la console Jenkins."
-    }
-/*     always {
-      echo "📦 Arrêt des containers Docker..."
-      sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true' */
-   post {
-     always {
-       script {
-         def buildStatus = currentBuild.currentResult
-         def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
+    always {
+      script {
+        def buildStatus = currentBuild.currentResult
+        def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
 
-         emailext(
-           subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-           body: """
-             <p><b>Jenkins Pipeline Notification</b></p>
-             <p>📌 <b>Project</b>: ${env.JOB_NAME}</p>
-             <p>🔢 <b>Build Number</b>: ${env.BUILD_NUMBER}</p>
-             <p>📊 <b>Status</b>: ${buildStatus}</p>
-             <p>👤 <b>Started by</b>: ${buildUser}</p>
-             <p>🔗 <b>URL</b>: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-             <P> "YA SOU YA M3ALLLLLEM " </p>
-           """,
-           to: 'amrisouhail96@gmail.com',
-           from: 'amrisouhail96@gmail.com',
-           replyTo: 'amrisouhail96@gmail.com',
-           mimeType: 'text/html'
+        // ✉️ Email Notification
+        emailext(
+          subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+          body: """
+            <p><b>Jenkins Pipeline Notification</b></p>
+            <p>📌 <b>Project</b>: ${env.JOB_NAME}</p>
+            <p>🔢 <b>Build Number</b>: ${env.BUILD_NUMBER}</p>
+            <p>📊 <b>Status</b>: ${buildStatus}</p>
+            <p>👤 <b>Started by</b>: ${buildUser}</p>
+            <p>🔗 <b>URL</b>: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+            <p>💬 YA SOU YA M3ALLLLLEM</p>
+          """,
+          to: 'amrisouhail96@gmail.com',
+          from: 'amrisouhail96@gmail.com',
+          replyTo: 'amrisouhail96@gmail.com',
+          mimeType: 'text/html'
+        )
 
-         )
-       }
-     }
-   }
-
-
-      slackSend(
-        channel: '#souhaiel',
-        color: COLOR_MAP[currentBuild.currentResult] ?: 'warning',
-        message: "*${currentBuild.currentResult}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nMore info: ${env.BUILD_URL}"
-      )
+        // 💬 Slack Notification
+        slackSend(
+          channel: '#souhaiel',
+          color: COLOR_MAP[buildStatus] ?: 'warning',
+          message: "*${buildStatus}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nMore info: ${env.BUILD_URL}"
+        )
+      }
     }
   }
 }
