@@ -37,6 +37,7 @@ pipeline {
     stage('📦 Package + Detect JAR') {
       steps {
         sh 'mvn package -DskipTests'
+        sh 'sleep 20'
         script {
           def jar = sh(script: "ls target/*.jar | grep -v 'original' | head -n 1", returnStdout: true).trim()
           env.JAR_NAME = jar.replaceAll('target/', '')
@@ -84,14 +85,9 @@ pipeline {
 
     stage('🚀 Docker Compose') {
       steps {
-        echo "🛠️ Suppression de l'ancien conteneur 'foyer-db' si nécessaire..."
-        sh 'docker rm -f foyer-db || true'
-
-        echo '🧹 Nettoyage avec docker-compose...'
-        sh 'docker-compose down --volumes --remove-orphans || true'
-
-        echo '🚀 Démarrage avec docker-compose...'
-        sh 'docker-compose up -d --build'
+        sh 'docker-compose stop springboot-app'
+        sh 'docker-compose up -d --build springboot-app'
+        sh 'sleep 30'
       }
     }
   }
