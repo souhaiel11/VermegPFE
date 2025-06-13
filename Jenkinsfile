@@ -31,19 +31,13 @@ pipeline {
       }
     }
 
-    stage('🧪 Tests Unitaires') {
-      steps {
-        echo "▶️ BlocServiceMockTest"
-        sh 'mvn test -Dtest=BlocServiceMockTest'
-      }
+  stage('🧪 Tests') {
+    steps {
+      echo "▶️ Tests unitaires et d’intégration"
+      sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
     }
+  }
 
-    stage('🧪 Tests d’Intégration') {
-      steps {
-        echo "▶️ BlocServiceTest"
-        sh 'mvn test -Dtest=BlocServiceTest'
-      }
-    }
 
     stage('📦 Packaging') {
       steps {
@@ -119,9 +113,9 @@ pipeline {
     failure {
       echo "❌ Le pipeline a échoué. Vérifiez la console Jenkins."
     }
-    always {
+/*     always {
       echo "📦 Arrêt des containers Docker..."
-      sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true'
+      sh 'docker-compose -f src/main/docker/docker-compose.yml down -v || true' */
 
       slackSend(
         channel: '#souhaiel',
