@@ -15,7 +15,7 @@ services:
   springboot-app:
     image: souhaielbloc:latest
     build:
-      context: .
+      context: .           # <- Contexte = racine
       dockerfile: Dockerfile
     container_name: springboot-app
     ports:
@@ -24,5 +24,4 @@ services:
       - foyer-db
 
 volumes:
-  foyer_db_data:
   mysql_data:
