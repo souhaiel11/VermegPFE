@@ -16,35 +16,31 @@ pipeline {
 
   stages {
 
-    stage('🧹 Nettoyage') {
+    stage('🧹 Clean') {
       steps {
-        echo "🧽 Maven clean..."
         sh 'mvn clean'
       }
     }
 
-    stage('⚙️ Compilation') {
+    stage('⚙️ Compile') {
       steps {
-        echo "🔧 Compilation du projet..."
         sh 'mvn compile'
       }
     }
 
     stage('🧪 Tests') {
       steps {
-        echo "▶️ Lancement des tests unitaires"
         sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
       }
     }
 
-    stage('📦 Packaging + JAR Detection') {
+    stage('📦 Package + Detect JAR') {
       steps {
-        echo "📦 Packaging avec skipTests"
         sh 'mvn package -DskipTests'
         script {
-          def jar = sh(script: "ls target/*.jar | grep -v original | head -n 1", returnStdout: true).trim()
+          def jar = sh(script: "ls target/*.jar | grep -v 'original' | head -n 1", returnStdout: true).trim()
           env.JAR_NAME = jar.replaceAll('target/', '')
-          echo "🗂️ JAR détecté : ${env.JAR_NAME}"
+          echo "JAR détecté : ${env.JAR_NAME}"
         }
       }
     }
@@ -62,23 +58,20 @@ pipeline {
       }
     }
 
-    stage('📤 Déploiement Nexus') {
+    stage('📤 Deploy Nexus') {
       steps {
-        echo "🚀 Déploiement vers Nexus"
         sh 'mvn deploy -DskipTests'
       }
     }
 
-    stage('🐳 Docker Build') {
+    stage('🐳 Build Docker') {
       steps {
-        echo "📦 Build de l'image Docker avec ${env.JAR_NAME}..."
         sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
 
-    stage('📤 Docker Push') {
+    stage('📤 Push Docker') {
       steps {
-        echo '📤 Envoi de l’image vers Docker Hub...'
         withCredentials([usernamePassword(credentialsId: 'dockerHub', usernameVariable: 'DOCKER_HUB_USER', passwordVariable: 'DOCKER_HUB_PASS')]) {
           sh """
             echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
@@ -89,9 +82,8 @@ pipeline {
       }
     }
 
-    stage('🚀 Docker Compose Deploy') {
+    stage('🚀 Docker Compose') {
       steps {
-        echo '🚀 Déploiement avec Docker Compose'
         sh 'docker-compose down || true'
         sh 'docker-compose up -d --build'
       }
@@ -105,15 +97,13 @@ pipeline {
         def buildUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')[0]?.userId ?: 'GitHub User'
 
         emailext(
-          subject: "📬 Pipeline ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+          subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
-            <p><b>Jenkins Pipeline Notification</b></p>
-            <p>📌 <b>Projet</b>: ${env.JOB_NAME}</p>
-            <p>🔢 <b>Build</b>: #${env.BUILD_NUMBER}</p>
-            <p>📊 <b>Statut</b>: ${buildStatus}</p>
-            <p>👤 <b>Déclenché par</b>: ${buildUser}</p>
-            <p>🔗 <a href="${env.BUILD_URL}">Voir sur Jenkins</a></p>
-            <p>💬 YA SOU YA M3ALLLLLEM</p>
+            <p>📌 Project: ${env.JOB_NAME}</p>
+            <p>🔢 Build: ${env.BUILD_NUMBER}</p>
+            <p>📊 Status: ${buildStatus}</p>
+            <p>👤 User: ${buildUser}</p>
+            <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
           """,
           to: 'amrisouhail96@gmail.com',
           from: 'amrisouhail96@gmail.com',
@@ -124,7 +114,7 @@ pipeline {
         slackSend(
           channel: '#souhaiel',
           color: COLOR_MAP[buildStatus] ?: 'warning',
-          message: "*${buildStatus}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nMore info: ${env.BUILD_URL}"
+          message: "*${buildStatus}:* Job `${env.JOB_NAME}` build `${env.BUILD_NUMBER}`\nURL: ${env.BUILD_URL}"
         )
       }
     }
