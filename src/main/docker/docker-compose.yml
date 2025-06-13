@@ -15,8 +15,13 @@ services:
     volumes:
       - foyer_db_data:/var/lib/mysql
 
-
+  springboot-app:
+    image: souhaielbloc:latest
+    container_name: springboot-app
+    ports:
+      - '8086:8086'
+    depends_on:
+      - foyer-db
 
 volumes:
   foyer_db_data:
-  testdb_data:
