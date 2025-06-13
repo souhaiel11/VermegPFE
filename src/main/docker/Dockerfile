@@ -1,11 +1,3 @@
-# Utilise l'image officielle MySQL 8.0
-# FROM mysql:8.0
-# ENV MYSQL_DATABASE=foyer
-# ENV MYSQL_ALLOW_EMPTY_PASSWORD=yes
-# EXPOSE 3306
-# VOLUME ["/var/lib/mysql"]
-
-
 FROM openjdk:17-alpine
 
 RUN apk --no-cache add freetype \
@@ -18,6 +10,6 @@ ENV _JAVA_OPTIONS="-Djava.awt.headless=true"
 VOLUME /tmp
 
 ARG JAR_FILE
-COPY target/${JAR_FILE} app.jar
+COPY ${JAR_FILE} app.jar
 
 ENTRYPOINT [ "sh", "-c", "java ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar /app.jar" ]
