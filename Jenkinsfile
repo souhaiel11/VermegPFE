@@ -43,6 +43,11 @@ pipeline {
         sh 'mvn package -DskipTests -e'
       }
     }
+   stage('📂 Copier le .jar dans src/main/docker') {
+     steps {
+       sh 'cp target/${JAR_NAME} src/main/docker/'
+  }
+}
 
     stage('🔍 Analyse SonarQube') {
       steps {
