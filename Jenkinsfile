@@ -84,7 +84,7 @@ pipeline {
 
     stage('🚀 Docker Compose') {
       steps {
-        sh 'docker-compose down || true'
+        sh 'docker-compose down --volumes --remove-orphans || true'
         sh 'docker-compose up -d --build'
       }
     }
