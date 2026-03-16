@@ -25,5 +25,6 @@ public interface IBlocService {
 
     // Not yet
     Bloc ajouterBlocEtAffecterAFoyer(Bloc b, String nomFoyer);
+ 
 
 }

@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # 1. Base de données MySQL
   foyer-db:
     image: mysql:8
     container_name: foyer-db
@@ -11,14 +12,120 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - devops-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
+  # 2. Application Spring Boot
   springboot-app:
     image: souhaielbloc:latest
     container_name: springboot-app
     ports:
-      - '8086:8086'
+      - "8086:8086"
     depends_on:
-      - foyer-db
+      foyer-db:
+        condition: service_healthy
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://foyer-db:3306/foyer?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=
+      - management.endpoints.web.exposure.include=prometheus,health,info
+    networks:
+      - devops-network
 
+  # 3. Nexus
+  nexus:
+    image: sonatype/nexus3:latest
+    container_name: nexus
+    ports:
+      - "8081:8081"
+    volumes:
+      - nexus_data:/nexus-data
+    networks:
+      - devops-network
+    restart: unless-stopped
+
+  # 4. Jenkins
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8082:8080"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - devops-network
+    restart: unless-stopped
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+    user: root
+
+  # 5. SonarQube
+  sonarqube:
+    image: sonarqube:latest
+    container_name: sonarqube
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - devops-network
+    environment:
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    restart: unless-stopped
+
+  # 6. Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - devops-network
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+
+  # 7. Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - devops-network
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_USER=admin
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+# Volumes pour persister les données
 volumes:
   mysql_data:
+  nexus_data:
+  jenkins_home:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+  prometheus_data:
+  grafana_data:
+
+# Réseau commun
+networks:
+  devops-network:
+    driver: bridge
