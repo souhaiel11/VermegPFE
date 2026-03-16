@@ -101,7 +101,7 @@ pipeline {
         emailext(
           subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
-            <p>📌 Project: ${env.JOB_NA"ME}</p>
+            <p>📌 Project: ${env.JOB_NAME}</p>
             <p>🔢 Build: ${env.BUILD_NUMBER}</p>
             <p>📊 Status: ${buildStatus}</p>
             <p>👤 User: ${buildUser}</p>
