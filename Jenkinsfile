@@ -61,16 +61,10 @@ pipeline {
     }
 
     stage('📤 Deploy Nexus') {
-          steps {
-            withCredentials([string(credentialsId: 'nexus-password', variable: 'NEXUS_PASSWORD')]) {
-              sh '''
-                mvn deploy -DskipTests \
-                  -Dserver.username=admin \
-                  -Dserver.password=$NEXUS_PASSWORD
-              '''
-            }
-          }
-        }
+      steps {
+        sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
+      }
+    }
 
 
     stage('🐳 Build Docker') {
