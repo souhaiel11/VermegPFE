@@ -50,7 +50,7 @@ pipeline {
 
     stage('🔍 Analyse SonarQube') {
       steps {
-        withSonarQubeEnv('MySonarServer') {
+        withSonarQubeEnv('sq1') {
           sh """
             mvn sonar:sonar \\
               -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
