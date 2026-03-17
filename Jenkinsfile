@@ -61,20 +61,17 @@ pipeline {
     }
 
     stage('📤 Deploy Nexus') {
-      steps {
-        withCredentials([usernamePassword(
-          credentialsId: 'nexus-credentials',  // À créer dans Jenkins
-          usernameVariable: 'NEXUS_USERNAME',
-          passwordVariable: 'NEXUS_PASSWORD'
-        )]) {
-          sh '''
-            mvn deploy -DskipTests \
-              -Dserver.username=$NEXUS_USERNAME \
-              -Dserver.password=$NEXUS_PASSWORD
-          '''
+          steps {
+            withCredentials([string(credentialsId: 'nexus-password', variable: 'NEXUS_PASSWORD')]) {
+              sh '''
+                mvn deploy -DskipTests \
+                  -Dserver.username=admin \
+                  -Dserver.password=$NEXUS_PASSWORD
+              '''
+            }
+          }
         }
-      }
-    }
+
 
     stage('🐳 Build Docker') {
       steps {
