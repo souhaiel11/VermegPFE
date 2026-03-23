@@ -6,9 +6,11 @@ def COLOR_MAP = [
 
 pipeline {
   agent any
+
   tools {
     maven 'M3'
   }
+
   environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://sonarqube:9000/'
@@ -66,7 +68,6 @@ pipeline {
       }
     }
 
-
     stage('🐳 Build Docker') {
       steps {
         sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
@@ -88,6 +89,7 @@ pipeline {
         }
       }
     }
+
     stage('🚀 Docker Compose') {
       steps {
         sh '''
@@ -97,13 +99,13 @@ pipeline {
         '''
       }
     }
+  }
 
   post {
     always {
       script {
         def buildStatus = currentBuild.currentResult
 
-        // Email notification
         emailext(
           subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
@@ -118,7 +120,6 @@ pipeline {
           mimeType: 'text/html'
         )
 
-        // Slack notification (à configurer ou commenter)
         try {
           slackSend(
             channel: '#souhaiel',
