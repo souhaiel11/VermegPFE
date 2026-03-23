@@ -6,14 +6,13 @@ def COLOR_MAP = [
 
 pipeline {
   agent any
-
   tools {
     maven 'M3'
   }
-
   environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://sonarqube:9000/'
+    SONAR_LOGIN       = credentials('sonarq')
     DOCKER_IMAGE      = 'pfevermeg'
   }
 
@@ -41,11 +40,8 @@ pipeline {
       steps {
         sh 'mvn package -DskipTests'
         script {
-          def jar = sh(
-            script: "ls target/*.jar | grep -v 'original' | head -n 1",
-            returnStdout: true
-          ).trim()
-          env.JAR_NAME = jar.replace('target/', '')
+          def jar = sh(script: "ls target/*.jar | grep -v 'original' | head -n 1", returnStdout: true).trim()
+          env.JAR_NAME = jar.replaceAll('target/', '')
           echo "JAR détecté : ${env.JAR_NAME}"
         }
       }
@@ -54,14 +50,12 @@ pipeline {
     stage('🔍 Analyse SonarQube') {
       steps {
         withSonarQubeEnv('sq1') {
-          withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
-            sh '''
-              mvn sonar:sonar \
-                -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.token=$SONAR_TOKEN
-            '''
-          }
+          sh """
+            mvn sonar:sonar \\
+              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
+              -Dsonar.host.url=${SONAR_HOST_URL} \\
+              -Dsonar.login=${SONAR_LOGIN}
+          """
         }
       }
     }
@@ -72,15 +66,10 @@ pipeline {
       }
     }
 
-    stage('🐳 Check Docker') {
-      steps {
-        sh 'docker version'
-      }
-    }
 
     stage('🐳 Build Docker') {
       steps {
-        sh 'docker build --build-arg JAR_FILE=$JAR_NAME -t $DOCKER_IMAGE:latest .'
+        sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
 
@@ -91,47 +80,45 @@ pipeline {
           usernameVariable: 'DOCKER_HUB_USER',
           passwordVariable: 'DOCKER_HUB_PASS'
         )]) {
-          sh '''
-            echo "$DOCKER_HUB_PASS" | docker login -u "$DOCKER_HUB_USER" --password-stdin
-            docker tag $DOCKER_IMAGE:latest $DOCKER_HUB_USER/$DOCKER_IMAGE:latest
-            docker push $DOCKER_HUB_USER/$DOCKER_IMAGE:latest
-          '''
+          sh """
+            echo "${DOCKER_HUB_PASS}" | docker login -u "${DOCKER_HUB_USER}" --password-stdin
+            docker tag ${DOCKER_IMAGE}:latest ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest
+            docker push ${DOCKER_HUB_USER}/${DOCKER_IMAGE}:latest
+          """
         }
       }
     }
-
     stage('🚀 Docker Compose') {
       steps {
         sh '''
-          docker compose stop springboot-app || true
-          docker compose rm -f springboot-app || true
+          docker ps -a | grep springboot-app || true
+          docker rm -f springboot-app || true
           docker compose up -d --no-deps --build springboot-app
         '''
       }
     }
-  }
 
   post {
     always {
       script {
         def buildStatus = currentBuild.currentResult
 
-        try {
-          emailext(
-            subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: """
-              <p>📌 Project: ${env.JOB_NAME}</p>
-              <p>🔢 Build: ${env.BUILD_NUMBER}</p>
-              <p>📊 Status: ${buildStatus}</p>
-              <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-            """,
-            to: 'amrisouhail96@gmail.com',
-            mimeType: 'text/html'
-          )
-        } catch (Exception e) {
-          echo "Email notification failed: ${e.message}"
-        }
+        // Email notification
+        emailext(
+          subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+          body: """
+            <p>📌 Project: ${env.JOB_NAME}</p>
+            <p>🔢 Build: ${env.BUILD_NUMBER}</p>
+            <p>📊 Status: ${buildStatus}</p>
+            <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+          """,
+          to: 'amrisouhail96@gmail.com',
+          from: 'amrisouhail96@gmail.com',
+          replyTo: 'amrisouhail96@gmail.com',
+          mimeType: 'text/html'
+        )
 
+        // Slack notification (à configurer ou commenter)
         try {
           slackSend(
             channel: '#souhaiel',
