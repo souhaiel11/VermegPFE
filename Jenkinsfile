@@ -52,12 +52,14 @@ pipeline {
     stage('🔍 Analyse SonarQube') {
       steps {
         withSonarQubeEnv('sq1') {
-          sh """
-            mvn sonar:sonar \\
-              -Dsonar.projectKey=${SONAR_PROJECT_KEY} \\
-              -Dsonar.host.url=${SONAR_HOST_URL} \\
-              -Dsonar.login=${SONAR_LOGIN}
-          """
+          withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
+            sh '''
+              mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+                -Dsonar.projectKey=$SONAR_PROJECT_KEY \
+                -Dsonar.host.url=$SONAR_HOST_URL \
+                -Dsonar.token=$SONAR_TOKEN
+            '''
+          }
         }
       }
     }
