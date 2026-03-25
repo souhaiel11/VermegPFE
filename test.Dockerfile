@@ -6,3 +6,4 @@ ENV MYSQL_ALLOW_EMPTY_PASSWORD=yes
 EXPOSE 3306
 
 VOLUME ["/var/lib/mysql"]
+#test
