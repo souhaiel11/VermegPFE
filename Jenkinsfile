@@ -6,38 +6,31 @@ def COLOR_MAP = [
 
 pipeline {
   agent any
-
   tools {
     maven 'M3'
   }
-
   environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://sonarqube:9000/'
     SONAR_LOGIN       = credentials('sonarq')
     DOCKER_IMAGE      = 'pfevermeg'
   }
-
   stages {
-
     stage('🧹 Clean') {
       steps {
         sh 'mvn clean'
       }
     }
-
     stage('⚙️ Compile') {
       steps {
         sh 'mvn compile'
       }
     }
-
     stage('🧪 Tests') {
       steps {
         sh 'mvn test -Dtest=BlocServiceMockTest,BlocServiceTest'
       }
     }
-
     stage('📦 Package + Detect JAR') {
       steps {
         sh 'mvn package -DskipTests'
@@ -48,7 +41,6 @@ pipeline {
         }
       }
     }
-
     stage('🔍 Analyse SonarQube') {
       steps {
         withSonarQubeEnv('sq1') {
@@ -63,19 +55,16 @@ pipeline {
         }
       }
     }
-
     stage('📤 Deploy Nexus') {
       steps {
         sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
       }
     }
-
     stage('🐳 Build Docker') {
       steps {
         sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
-
     stage('📤 Push Docker') {
       steps {
         withCredentials([usernamePassword(
@@ -91,7 +80,6 @@ pipeline {
         }
       }
     }
-
     stage('🚀 Docker Compose') {
       steps {
         sh '''
@@ -102,12 +90,12 @@ pipeline {
       }
     }
   }
-
   post {
     always {
       script {
         def buildStatus = currentBuild.currentResult
 
+        // ── Email ────────────────────────────────────────────────
         emailext(
           subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
           body: """
@@ -122,6 +110,7 @@ pipeline {
           mimeType: 'text/html'
         )
 
+        // ── Slack ────────────────────────────────────────────────
         try {
           slackSend(
             channel: '#souhaiel',
@@ -130,6 +119,40 @@ pipeline {
           )
         } catch (Exception e) {
           echo "Slack notification failed: ${e.message}"
+        }
+
+        // ── DevSecOps IA — n8n Notification ─────────────────────
+        try {
+          def severity = (buildStatus == 'FAILURE') ? 'HIGH' : (buildStatus == 'UNSTABLE') ? 'MEDIUM' : 'LOW'
+          def payload = """{
+            "jenkins": true,
+            "build": {
+              "number": ${env.BUILD_NUMBER},
+              "status": "${buildStatus}",
+              "phase": "FINALIZED",
+              "url": "${env.BUILD_URL}"
+            },
+            "name": "${env.JOB_NAME}",
+            "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
+            "severity": "${severity}",
+            "logs": [
+              "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+              "URL: ${env.BUILD_URL}"
+            ]
+          }"""
+
+          httpRequest(
+            url: 'http://n8n:5678/webhook/incident-intake',
+            httpMode: 'POST',
+            contentType: 'APPLICATION_JSON',
+            requestBody: payload,
+            customHeaders: [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
+            ignoreSslErrors: true,
+            validResponseCodes: '100:599'
+          )
+          echo "✅ Notification DevSecOps IA envoyée — statut: ${buildStatus}"
+        } catch (Exception e) {
+          echo "⚠️ Notification DevSecOps IA failed: ${e.message}"
         }
 
         echo "Build terminé: ${buildStatus}"
