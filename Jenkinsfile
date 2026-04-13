@@ -147,8 +147,9 @@ pipeline {
             ]
           }"""
 
+          // ✅ URL corrigée — IP WSL directe
           httpRequest(
-            url                : 'http://n8n:5678/webhook/jenkins-event',
+            url                : 'http://172.31.172.61:5678/webhook/jenkins-event',
             httpMode           : 'POST',
             contentType        : 'APPLICATION_JSON',
             requestBody        : payload,
@@ -164,5 +165,5 @@ pipeline {
         echo "Build terminé: ${buildStatus}"
       }
     }
-  
-
+  }
+}
