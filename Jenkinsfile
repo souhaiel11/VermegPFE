@@ -12,7 +12,7 @@ pipeline {
   environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     SONAR_HOST_URL    = 'http://sonarqube:9000/'
-    SONAR_LOGIN       = credentials('sonarq')
+    SONAR_LOGIN       = credentials('last--')
     DOCKER_IMAGE      = 'pfevermeg'
   }
   stages {
