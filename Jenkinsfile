@@ -164,5 +164,5 @@ pipeline {
         echo "Build terminé: ${buildStatus}"
       }
     }
-  }
-}
+  
+
