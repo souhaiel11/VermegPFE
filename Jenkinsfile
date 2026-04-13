@@ -41,20 +41,21 @@ pipeline {
         }
       }
     }
-    stage('🔍 Analyse SonarQube') {
-      steps {
+stage('🔍 Analyse SonarQube') {
+    steps {
         withSonarQubeEnv('sq1') {
-          withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
-            sh '''
-                /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn sonar:sonar \
-                -Dsonar.projectKey=$SONAR_PROJECT_KEY \
-                -Dsonar.host.url=$SONAR_HOST_URL \
-                -Dsonar.token=$SONAR_TOKEN
-            '''
-          }
+            withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                    # Définir les variables ou les passer directement
+                    /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn sonar:sonar \
+                        -Dsonar.projectKey=equipe1-3arctic1-2425 \
+                        -Dsonar.host.url=http://sonarqube:9000 \
+                        -Dsonar.token=${SONAR_TOKEN}
+                '''
+            }
         }
-      }
     }
+}
     stage('📤 Deploy Nexus') {
       steps {
         sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
