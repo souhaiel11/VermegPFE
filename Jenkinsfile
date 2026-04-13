@@ -91,19 +91,21 @@ stage('🔍 Analyse SonarQube') {
         def buildStatus = currentBuild.currentResult
 
         // ── Email ────────────────────────────────────────────────
-        emailext(
-          subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-          body: """
-            <p>📌 Project: ${env.JOB_NAME}</p>
-            <p>🔢 Build: ${env.BUILD_NUMBER}</p>
-            <p>📊 Status: ${buildStatus}</p>
-            <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
-          """,
-          to: 'amrisouhail96@gmail.com',
-          from: 'amrisouhail96@gmail.com',
-          replyTo: 'amrisouhail96@gmail.com',
-          mimeType: 'text/html'
-        )
+        withCredentials([string(credentialsId: 'build-notification-email', variable: 'NOTIFY_EMAIL')]) {
+          emailext(
+            subject: "📬 Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: """
+              <p>📌 Project: ${env.JOB_NAME}</p>
+              <p>🔢 Build: ${env.BUILD_NUMBER}</p>
+              <p>📊 Status: ${buildStatus}</p>
+              <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
+            """,
+            to: "${NOTIFY_EMAIL}",
+            from: "${NOTIFY_EMAIL}",
+            replyTo: "${NOTIFY_EMAIL}",
+            mimeType: 'text/html'
+          )
+        }
 
         // ── Slack ────────────────────────────────────────────────
         try {
@@ -118,34 +120,36 @@ stage('🔍 Analyse SonarQube') {
 
         // ── DevSecOps IA — n8n Notification ─────────────────────
         try {
-          def severity = (buildStatus == 'FAILURE') ? 'HIGH' : (buildStatus == 'UNSTABLE') ? 'MEDIUM' : 'LOW'
-          def payload = """{
-            "jenkins": true,
-            "build": {
-              "number": ${env.BUILD_NUMBER},
-              "status": "${buildStatus}",
-              "phase": "FINALIZED",
-              "url": "${env.BUILD_URL}"
-            },
-            "name": "${env.JOB_NAME}",
-            "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
-            "severity": "${severity}",
-            "logs": [
-              "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-              "URL: ${env.BUILD_URL}"
-            ]
-          }"""
+          withCredentials([string(credentialsId: 'n8n-api-key', variable: 'N8N_API_KEY')]) {
+            def severity = (buildStatus == 'FAILURE') ? 'HIGH' : (buildStatus == 'UNSTABLE') ? 'MEDIUM' : 'LOW'
+            def payload = """{
+              "jenkins": true,
+              "build": {
+                "number": ${env.BUILD_NUMBER},
+                "status": "${buildStatus}",
+                "phase": "FINALIZED",
+                "url": "${env.BUILD_URL}"
+              },
+              "name": "${env.JOB_NAME}",
+              "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
+              "severity": "${severity}",
+              "logs": [
+                "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                "URL: ${env.BUILD_URL}"
+              ]
+            }"""
 
-          httpRequest(
-            url: 'http://n8n:5678/webhook/incident-intake',
-            httpMode: 'POST',
-            contentType: 'APPLICATION_JSON',
-            requestBody: payload,
-            customHeaders: [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
-            ignoreSslErrors: true,
-            validResponseCodes: '100:599'
-          )
-          echo "✅ Notification DevSecOps IA envoyée — statut: ${buildStatus}"
+            httpRequest(
+              url: 'http://n8n:5678/webhook/incident-intake',
+              httpMode: 'POST',
+              contentType: 'APPLICATION_JSON',
+              requestBody: payload,
+              customHeaders: [[name: 'X-API-Key', value: "${N8N_API_KEY}"]],
+              ignoreSslErrors: true,
+              validResponseCodes: '100:599'
+            )
+            echo "✅ Notification DevSecOps IA envoyée — statut: ${buildStatus}"
+          }
         } catch (Exception e) {
           echo "⚠️ Notification DevSecOps IA failed: ${e.message}"
         }
