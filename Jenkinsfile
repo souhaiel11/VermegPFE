@@ -46,7 +46,7 @@ pipeline {
         withSonarQubeEnv('sq1') {
           withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
             sh '''
-              mvn org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+                /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn sonar:sonar \
                 -Dsonar.projectKey=$SONAR_PROJECT_KEY \
                 -Dsonar.host.url=$SONAR_HOST_URL \
                 -Dsonar.token=$SONAR_TOKEN
