@@ -9,10 +9,10 @@ pipeline {
   tools {
     maven 'M3'
   }
-environment {
+  environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
     DOCKER_IMAGE      = 'pfevermeg'
-}
+  }
   stages {
     stage('🧹 Clean') {
       steps {
@@ -39,17 +39,17 @@ environment {
         }
       }
     }
-   stage('🔍 Analyse SonarQube') {
-     steps {
+    stage('🔍 Analyse SonarQube') {
+      steps {
         withSonarQubeEnv('sq1') {
-            sh '''
-                /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn \
-                org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
-                -Dsonar.projectKey=$SONAR_PROJECT_KEY
-            '''
+          sh '''
+            /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn \
+            org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+            -Dsonar.projectKey=$SONAR_PROJECT_KEY
+          '''
         }
+      }
     }
-}
     stage('📤 Deploy Nexus') {
       steps {
         sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
@@ -85,6 +85,7 @@ environment {
       }
     }
   }
+
   post {
     always {
       script {
@@ -117,50 +118,51 @@ environment {
         }
 
         // ── DevSecOps IA — n8n Notification ─────────────────────
-try {
-  def event = (buildStatus == 'SUCCESS') ? 'pipeline_success' 
-            : (buildStatus == 'UNSTABLE') ? 'pipeline_failed' 
-            : 'pipeline_failed'
+        try {
+          def event    = (buildStatus == 'SUCCESS')  ? 'pipeline_success'
+                       : (buildStatus == 'UNSTABLE') ? 'pipeline_failed'
+                       : 'pipeline_failed'
 
-  def severity = (buildStatus == 'FAILURE') ? 'HIGH' 
-               : (buildStatus == 'UNSTABLE') ? 'MEDIUM' 
-               : 'LOW'
+          def severity = (buildStatus == 'FAILURE')  ? 'HIGH'
+                       : (buildStatus == 'UNSTABLE') ? 'MEDIUM'
+                       : 'LOW'
 
-  def payload = """{
-    "event": "${event}",
-    "job": "${env.JOB_NAME}",
-    "build_number": "${env.BUILD_NUMBER}",
-    "build_url": "${env.BUILD_URL}",
-    "logs_url": "${env.BUILD_URL}consoleText",
-    "branch": "${env.GIT_BRANCH ?: 'unknown'}",
-    "severity": "${severity}",
-    "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
-    "jenkins": true,
-    "build": {
-      "status": "${buildStatus}",
-      "phase": "FINALIZED"
-    },
-    "logs": [
-      "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-      "URL: ${env.BUILD_URL}"
-    ]
-  }"""
+          def payload = """{
+            "event": "${event}",
+            "job": "${env.JOB_NAME}",
+            "build_number": "${env.BUILD_NUMBER}",
+            "build_url": "${env.BUILD_URL}",
+            "logs_url": "${env.BUILD_URL}consoleText",
+            "branch": "${env.GIT_BRANCH ?: 'unknown'}",
+            "severity": "${severity}",
+            "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
+            "jenkins": true,
+            "build": {
+              "status": "${buildStatus}",
+              "phase": "FINALIZED"
+            },
+            "logs": [
+              "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+              "URL: ${env.BUILD_URL}"
+            ]
+          }"""
 
-  httpRequest(
-    url                : 'http://n8n:5678/webhook/jenkins-event',
-    httpMode           : 'POST',
-    contentType        : 'APPLICATION_JSON',
-    requestBody        : payload,
-    customHeaders      : [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
-    ignoreSslErrors    : true,
-    validResponseCodes : '100:599'
-  )
-  echo "✅ n8n notifié — event: ${event} | statut: ${buildStatus}"
-} catch (Exception e) {
-  echo "⚠️ n8n notification failed: ${e.message}"
-}
+          httpRequest(
+            url                : 'http://n8n:5678/webhook/jenkins-event',
+            httpMode           : 'POST',
+            contentType        : 'APPLICATION_JSON',
+            requestBody        : payload,
+            customHeaders      : [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
+            ignoreSslErrors    : true,
+            validResponseCodes : '100:599'
+          )
+          echo "✅ n8n notifié — event: ${event} | statut: ${buildStatus}"
+        } catch (Exception e) {
+          echo "⚠️ n8n notification failed: ${e.message}"
+        }
+
+        echo "Build terminé: ${buildStatus}"
+      }
     }
   }
 }
-  
-
