@@ -9,12 +9,10 @@ pipeline {
   tools {
     maven 'M3'
   }
-  environment {
+environment {
     SONAR_PROJECT_KEY = 'equipe1-3arctic1-2425'
-    SONAR_HOST_URL    = 'http://sonarqube:9000/'
-    SONAR_LOGIN       = credentials('last--')
     DOCKER_IMAGE      = 'pfevermeg'
-  }
+}
   stages {
     stage('🧹 Clean') {
       steps {
@@ -44,15 +42,11 @@ pipeline {
 stage('🔍 Analyse SonarQube') {
     steps {
         withSonarQubeEnv('sq1') {
-            withCredentials([string(credentialsId: 'sonarq', variable: 'SONAR_TOKEN')]) {
-                sh '''
-                    # Définir les variables ou les passer directement
-                    /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn sonar:sonar \
-                        -Dsonar.projectKey=equipe1-3arctic1-2425 \
-                        -Dsonar.host.url=http://sonarqube:9000 \
-                        -Dsonar.token=${SONAR_TOKEN}
-                '''
-            }
+            sh '''
+                /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn \
+                org.sonarsource.scanner.maven:sonar-maven-plugin:4.0.0.4121:sonar \
+                -Dsonar.projectKey=$SONAR_PROJECT_KEY
+            '''
         }
     }
 }
