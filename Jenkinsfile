@@ -39,7 +39,7 @@ environment {
         }
       }
     }
-stage('🔍 Analyse SonarQube') {
+('🔍 Analyse SonarQube') {
     steps {
         withSonarQubeEnv('sq1') {
             sh '''
@@ -152,6 +152,8 @@ stage('🔍 Analyse SonarQube') {
 
         echo "Build terminé: ${buildStatus}"
       }
-    
+    }
+  }
+}
   
 
