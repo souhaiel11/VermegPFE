@@ -100,9 +100,9 @@ pipeline {
             <p>📊 Status: ${buildStatus}</p>
             <p>🔗 <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>
           """,
-          to: 'amrisouhail96@gmail.com',
-          from: 'amrisouhail96@gmail.com',
-          replyTo: 'amrisouhail96@gmail.com',
+          to: '${JENKINS_NOTIFICATION_EMAIL}',
+          from: '${JENKINS_NOTIFICATION_EMAIL}',
+          replyTo: '${JENKINS_NOTIFICATION_EMAIL}',
           mimeType: 'text/html'
         )
 
@@ -127,7 +127,8 @@ pipeline {
                        : (buildStatus == 'UNSTABLE') ? 'MEDIUM'
                        : 'LOW'
 
-          def payload = """{
+          def payload = """
+{
             "event": "${event}",
             "job": "${env.JOB_NAME}",
             "build_number": "${env.BUILD_NUMBER}",
@@ -147,13 +148,13 @@ pipeline {
             ]
           }"""
 
-          // ✅ URL corrigée — IP WSL directe
+          // ✅ URL from environment variable
           httpRequest(
-            url                : 'http://172.31.172.61:5678/webhook/jenkins-event',
+            url                : '${N8N_WEBHOOK_URL}',
             httpMode           : 'POST',
             contentType        : 'APPLICATION_JSON',
             requestBody        : payload,
-            customHeaders      : [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
+            customHeaders      : [[name: 'X-API-Key', value: '${N8N_API_KEY}']],
             ignoreSslErrors    : true,
             validResponseCodes : '100:599'
           )
@@ -166,4 +167,3 @@ pipeline {
       }
     }
   }
-
