@@ -39,8 +39,8 @@ environment {
         }
       }
     }
-('🔍 Analyse SonarQube') {
-    steps {
+   stage('🔍 Analyse SonarQube') {
+     steps {
         withSonarQubeEnv('sq1') {
             sh '''
                 /var/jenkins_home/tools/hudson.tasks.Maven_MavenInstallation/M3/bin/mvn \
