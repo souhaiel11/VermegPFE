@@ -152,6 +152,6 @@ stage('🔍 Analyse SonarQube') {
 
         echo "Build terminé: ${buildStatus}"
       }
-    }
-  }
-}
+    
+  
+
