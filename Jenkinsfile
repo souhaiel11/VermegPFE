@@ -117,41 +117,48 @@ environment {
         }
 
         // ── DevSecOps IA — n8n Notification ─────────────────────
-        try {
-          def severity = (buildStatus == 'FAILURE') ? 'HIGH' : (buildStatus == 'UNSTABLE') ? 'MEDIUM' : 'LOW'
-          def payload = """{
-            "jenkins": true,
-            "build": {
-              "number": ${env.BUILD_NUMBER},
-              "status": "${buildStatus}",
-              "phase": "FINALIZED",
-              "url": "${env.BUILD_URL}"
-            },
-            "name": "${env.JOB_NAME}",
-            "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
-            "severity": "${severity}",
-            "logs": [
-              "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-              "URL: ${env.BUILD_URL}"
-            ]
-          }"""
+try {
+  def event = (buildStatus == 'SUCCESS') ? 'pipeline_success' 
+            : (buildStatus == 'UNSTABLE') ? 'pipeline_failed' 
+            : 'pipeline_failed'
 
-          httpRequest(
-            url: 'http://n8n:5678/webhook/incident-intake',
-            httpMode: 'POST',
-            contentType: 'APPLICATION_JSON',
-            requestBody: payload,
-            customHeaders: [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
-            ignoreSslErrors: true,
-            validResponseCodes: '100:599'
-          )
-          echo "✅ Notification DevSecOps IA envoyée — statut: ${buildStatus}"
-        } catch (Exception e) {
-          echo "⚠️ Notification DevSecOps IA failed: ${e.message}"
-        }
+  def severity = (buildStatus == 'FAILURE') ? 'HIGH' 
+               : (buildStatus == 'UNSTABLE') ? 'MEDIUM' 
+               : 'LOW'
 
-        echo "Build terminé: ${buildStatus}"
-      }
+  def payload = """{
+    "event": "${event}",
+    "job": "${env.JOB_NAME}",
+    "build_number": "${env.BUILD_NUMBER}",
+    "build_url": "${env.BUILD_URL}",
+    "logs_url": "${env.BUILD_URL}consoleText",
+    "branch": "${env.GIT_BRANCH ?: 'unknown'}",
+    "severity": "${severity}",
+    "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
+    "jenkins": true,
+    "build": {
+      "status": "${buildStatus}",
+      "phase": "FINALIZED"
+    },
+    "logs": [
+      "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+      "URL: ${env.BUILD_URL}"
+    ]
+  }"""
+
+  httpRequest(
+    url                : 'http://n8n:5678/webhook/jenkins-event',
+    httpMode           : 'POST',
+    contentType        : 'APPLICATION_JSON',
+    requestBody        : payload,
+    customHeaders      : [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
+    ignoreSslErrors    : true,
+    validResponseCodes : '100:599'
+  )
+  echo "✅ n8n notifié — event: ${event} | statut: ${buildStatus}"
+} catch (Exception e) {
+  echo "⚠️ n8n notification failed: ${e.message}"
+}
     }
   }
 }
