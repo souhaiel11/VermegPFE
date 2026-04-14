@@ -119,45 +119,48 @@ pipeline {
 
         // ── DevSecOps IA — n8n Notification ─────────────────────
         try {
-          def event    = (buildStatus == 'SUCCESS')  ? 'pipeline_success'
-                       : (buildStatus == 'UNSTABLE') ? 'pipeline_failed'
-                       : 'pipeline_failed'
+          withCredentials([string(credentialsId: 'n8n-webhook-url', variable: 'N8N_WEBHOOK_URL'),
+                          string(credentialsId: 'n8n-api-key', variable: 'N8N_API_KEY')]) {
+            def event    = (buildStatus == 'SUCCESS')  ? 'pipeline_success'
+                         : (buildStatus == 'UNSTABLE') ? 'pipeline_failed'
+                         : 'pipeline_failed'
 
-          def severity = (buildStatus == 'FAILURE')  ? 'HIGH'
-                       : (buildStatus == 'UNSTABLE') ? 'MEDIUM'
-                       : 'LOW'
+            def severity = (buildStatus == 'FAILURE')  ? 'HIGH'
+                         : (buildStatus == 'UNSTABLE') ? 'MEDIUM'
+                         : 'LOW'
 
-          def payload = """{
-            "event": "${event}",
-            "job": "${env.JOB_NAME}",
-            "build_number": "${env.BUILD_NUMBER}",
-            "build_url": "${env.BUILD_URL}",
-            "logs_url": "${env.BUILD_URL}consoleText",
-            "branch": "${env.GIT_BRANCH ?: 'unknown'}",
-            "severity": "${severity}",
-            "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
-            "jenkins": true,
-            "build": {
-              "status": "${buildStatus}",
-              "phase": "FINALIZED"
-            },
-            "logs": [
-              "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-              "URL: ${env.BUILD_URL}"
-            ]
-          }"""
+            def payload = """
+              {
+                "event": "${event}",
+                "job": "${env.JOB_NAME}",
+                "build_number": "${env.BUILD_NUMBER}",
+                "build_url": "${env.BUILD_URL}",
+                "logs_url": "${env.BUILD_URL}consoleText",
+                "branch": "${env.GIT_BRANCH ?: 'unknown'}",
+                "severity": "${severity}",
+                "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
+                "jenkins": true,
+                "build": {
+                  "status": "${buildStatus}",
+                  "phase": "FINALIZED"
+                },
+                "logs": [
+                  "Build ${buildStatus}: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                  "URL: ${env.BUILD_URL}"
+                ]
+              }"""
 
-          // ✅ URL corrigée — IP WSL directe
-          httpRequest(
-            url                : 'http://172.31.172.61:5678/webhook/jenkins-event',
-            httpMode           : 'POST',
-            contentType        : 'APPLICATION_JSON',
-            requestBody        : payload,
-            customHeaders      : [[name: 'X-API-Key', value: 'devsecops-secret-2024']],
-            ignoreSslErrors    : true,
-            validResponseCodes : '100:599'
-          )
-          echo "✅ n8n notifié — event: ${event} | statut: ${buildStatus}"
+            httpRequest(
+              url                : env.N8N_WEBHOOK_URL,
+              httpMode           : 'POST',
+              contentType        : 'APPLICATION_JSON',
+              requestBody        : payload,
+              customHeaders      : [[name: 'X-API-Key', value: env.N8N_API_KEY]],
+              ignoreSslErrors    : true,
+              validResponseCodes : '100:599'
+            )
+            echo "✅ n8n notifié — event: ${event} | statut: ${buildStatus}"
+          }
         } catch (Exception e) {
           echo "⚠️ n8n notification failed: ${e.message}"
         }
@@ -166,4 +169,3 @@ pipeline {
       }
     }
   }
-
