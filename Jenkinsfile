@@ -55,7 +55,13 @@ pipeline {
         sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
       }
     }
-    stage('🔒 Trivy Scan') {
+  
+    stage('🐳 Build Docker') {
+      steps {
+        sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
+      }
+    }
+      stage('🔒 Trivy Scan') {
   steps {
     script {
       // Scan de l'image et génération rapport JSON
@@ -98,11 +104,6 @@ pipeline {
     }
   }
 }
-    stage('🐳 Build Docker') {
-      steps {
-        sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
-      }
-    }
     stage('📤 Push Docker') {
       steps {
         withCredentials([usernamePassword(
