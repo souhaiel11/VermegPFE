@@ -179,6 +179,10 @@ pipeline {
             "logs_url": "${env.BUILD_URL}consoleText",
             "branch": "${env.GIT_BRANCH ?: 'unknown'}",
             "severity": "${severity}",
+            "trivy": {
+              "critical": ${env.TRIVY_CRITICAL ?: 0},
+              "high": ${env.TRIVY_HIGH ?: 0}
+            },
             "sonarProjectKey": "${env.SONAR_PROJECT_KEY}",
             "jenkins": true,
             "build": {
