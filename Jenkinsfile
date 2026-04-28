@@ -55,55 +55,54 @@ pipeline {
         sh 'mvn deploy -DskipTests --settings /var/jenkins_home/.m2/settings.xml'
       }
     }
-  
     stage('🐳 Build Docker') {
       steps {
         sh "docker build --build-arg JAR_FILE=${env.JAR_NAME} -t ${DOCKER_IMAGE}:latest ."
       }
     }
-      stage('🔒 Trivy Scan') {
-  steps {
-    script {
-      // Scan de l'image et génération rapport JSON
-      sh """
-        trivy image \
-          --exit-code 1 \
-          --severity CRITICAL \
-          --format json \
-          --output trivy-report.json \
-          ${DOCKER_IMAGE}:latest || true
-      """
+    stage('🔒 Trivy Scan') {
+      steps {
+        script {
+          // Scan de l'image et génération rapport JSON
+          sh """
+            trivy image \
+              --exit-code 1 \
+              --severity CRITICAL \
+              --format json \
+              --output trivy-report.json \
+              ${DOCKER_IMAGE}:latest || true
+          """
 
-      // Lire le rapport et compter les CRITICAL
-      def reportJson = readFile('trivy-report.json')
-      def report = new groovy.json.JsonSlurper().parseText(reportJson)
+          // Lire le rapport et compter les CRITICAL
+          def reportJson = readFile('trivy-report.json')
+          def report = new groovy.json.JsonSlurper().parseText(reportJson)
 
-      def criticalCount = 0
-      def highCount = 0
+          def criticalCount = 0
+          def highCount = 0
 
-      report.Results?.each { result ->
-        result.Vulnerabilities?.each { vuln ->
-          if (vuln.Severity == 'CRITICAL') criticalCount++
-          if (vuln.Severity == 'HIGH') highCount++
+          report.Results?.each { result ->
+            result.Vulnerabilities?.each { vuln ->
+              if (vuln.Severity == 'CRITICAL') criticalCount++
+              if (vuln.Severity == 'HIGH') highCount++
+            }
+          }
+
+          echo "🔴 CRITICAL: ${criticalCount} | 🟠 HIGH: ${highCount}"
+          env.TRIVY_CRITICAL = "${criticalCount}"
+          env.TRIVY_HIGH = "${highCount}"
+
+          // Bloquer si CRITICAL trouvée
+          if (criticalCount > 0) {
+            error("🚨 Trivy: ${criticalCount} vulnérabilité(s) CRITICAL détectée(s) !")
+          }
         }
       }
-
-      echo "🔴 CRITICAL: ${criticalCount} | 🟠 HIGH: ${highCount}"
-      env.TRIVY_CRITICAL = "${criticalCount}"
-      env.TRIVY_HIGH = "${highCount}"
-
-      // Bloquer si CRITICAL trouvée
-      if (criticalCount > 0) {
-        error("🚨 Trivy: ${criticalCount} vulnérabilité(s) CRITICAL détectée(s) !")
+      post {
+        always {
+          archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
+        }
       }
     }
-  }
-  post {
-    always {
-      archiveArtifacts artifacts: 'trivy-report.json', allowEmptyArchive: true
-    }
-  }
-}
     stage('📤 Push Docker') {
       steps {
         withCredentials([usernamePassword(
@@ -171,7 +170,8 @@ pipeline {
                        : (buildStatus == 'UNSTABLE') ? 'MEDIUM'
                        : 'LOW'
 
-          def payload = """{
+          def payload = """
+{
             "event": "${event}",
             "job": "${env.JOB_NAME}",
             "build_number": "${env.BUILD_NUMBER}",
